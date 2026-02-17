@@ -2,6 +2,7 @@ package ifmo.se.lab1app.campaign.model;
 
 public enum CampaignEventType {
     CAMPAIGN_CREATED,
+    CAMPAIGN_DRAFT_UPDATED,
     CAMPAIGN_CONFIGURED,
     CREATIVES_UPLOADED,
     SUBMITTED_FOR_CHECK,

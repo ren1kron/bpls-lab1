@@ -1,6 +1,14 @@
 package ifmo.se.lab1app.campaign.dto;
 
-import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 
-public record ConfigureCampaignRequest(@NotBlank String configuration) {
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
+
+public record ConfigureCampaignRequest(
+        @NotNull BigDecimal budgetAmount,
+        @NotNull LocalDateTime startAt,
+        @NotNull LocalDateTime endAt,
+        String notes
+) {
 }

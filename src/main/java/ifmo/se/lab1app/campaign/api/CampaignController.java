@@ -1,14 +1,7 @@
 package ifmo.se.lab1app.campaign.api;
 
-import ifmo.se.lab1app.campaign.dto.CampaignHistoryEventResponse;
-import ifmo.se.lab1app.campaign.dto.CampaignResponse;
-import ifmo.se.lab1app.campaign.dto.ConfigureCampaignRequest;
-import ifmo.se.lab1app.campaign.dto.CreateCampaignRequest;
-import ifmo.se.lab1app.campaign.dto.ModerationDecisionRequest;
-import ifmo.se.lab1app.campaign.dto.PaymentReceivedRequest;
-import ifmo.se.lab1app.campaign.dto.ResumeDecisionRequest;
-import ifmo.se.lab1app.campaign.dto.UploadCreativesRequest;
-import ifmo.se.lab1app.campaign.dto.ValidationResultRequest;
+import ifmo.se.lab1app.campaign.dto.*;
+import ifmo.se.lab1app.campaign.dto.DraftCampaignRequest;
 import ifmo.se.lab1app.campaign.service.CampaignWorkflowService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -20,6 +13,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
@@ -39,8 +33,18 @@ public class CampaignController {
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     @Operation(summary = "Создать черновик кампании")
-    public CampaignResponse createCampaign(@Valid @RequestBody CreateCampaignRequest request) {
+    public CampaignResponse createCampaign(@Valid @RequestBody DraftCampaignRequest request) {
         return campaignWorkflowService.createCampaign(request);
+    }
+
+    @PutMapping("/{campaignId}")
+    @Operation(summary = "Обновить черновик кампании")
+    public CampaignResponse updateCampaignDraft(
+        @Parameter(description = "Идентификатор экземпляра процесса (campaignId)")
+        @PathVariable Long campaignId,
+        @Valid @RequestBody DraftCampaignRequest request
+    ) {
+        return campaignWorkflowService.updateCampaignDraft(campaignId, request);
     }
 
     @GetMapping

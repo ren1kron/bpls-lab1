@@ -3,7 +3,7 @@ package ifmo.se.lab1app.campaign.service;
 import ifmo.se.lab1app.campaign.dto.CampaignHistoryEventResponse;
 import ifmo.se.lab1app.campaign.dto.CampaignResponse;
 import ifmo.se.lab1app.campaign.dto.ConfigureCampaignRequest;
-import ifmo.se.lab1app.campaign.dto.CreateCampaignRequest;
+import ifmo.se.lab1app.campaign.dto.DraftCampaignRequest;
 import ifmo.se.lab1app.campaign.dto.ModerationDecisionRequest;
 import ifmo.se.lab1app.campaign.dto.PaymentReceivedRequest;
 import ifmo.se.lab1app.campaign.dto.ResumeDecisionRequest;
@@ -17,6 +17,7 @@ import ifmo.se.lab1app.campaign.model.CampaignHistoryEvent;
 import ifmo.se.lab1app.campaign.model.CampaignStatus;
 import ifmo.se.lab1app.campaign.model.Invoice;
 import ifmo.se.lab1app.campaign.model.InvoiceStatus;
+import ifmo.se.lab1app.campaign.model.creative.Creative;
 import ifmo.se.lab1app.campaign.repository.CampaignHistoryEventRepository;
 import ifmo.se.lab1app.campaign.repository.CampaignRepository;
 import java.time.LocalDateTime;
@@ -46,22 +47,33 @@ public class CampaignWorkflowService {
         this.historyEventRepository = historyEventRepository;
     }
 
-    public CampaignResponse createCampaign(CreateCampaignRequest request) {
+    public CampaignResponse createCampaign(DraftCampaignRequest request) {
         Campaign campaign = new Campaign();
         campaign.setName(request.name());
-        campaign.setAdvertiserId(request.advertiserId());
-        campaign.setBudgetAmount(request.budgetAmount());
-        campaign.setStartAt(request.startAt());
-        campaign.setEndAt(request.endAt());
-        campaign.setInvoiceDueDays(
-            request.invoiceDueDays() == null || request.invoiceDueDays() < 1
-                ? DEFAULT_INVOICE_DUE_DAYS
-                : request.invoiceDueDays()
-        );
+        campaign.setObjective(request.objective());
+        campaign.setType(request.campaignType());
+        campaign.setStartMode(request.startMode());
+        campaign.setUrl(request.url());
+        campaign.setNotes(request.notes());
         campaign.setStatus(CampaignStatus.DRAFT);
-        campaign.setBudgetFormed(false);
 
         addHistory(campaign, CampaignEventType.CAMPAIGN_CREATED, "Черновик кампании создан");
+
+        return CampaignResponse.from(campaignRepository.save(campaign));
+    }
+
+    public CampaignResponse updateCampaignDraft(Long campaignId, DraftCampaignRequest request) {
+        Campaign campaign = findCampaign(campaignId);
+        requireStatus(campaign, CampaignStatus.DRAFT);
+
+        campaign.setName(request.name());
+        campaign.setObjective(request.objective());
+        campaign.setType(request.campaignType());
+        campaign.setStartMode(request.startMode());
+        campaign.setUrl(request.url());
+        campaign.setNotes(request.notes());
+
+        addHistory(campaign, CampaignEventType.CAMPAIGN_DRAFT_UPDATED, "Черновик кампании обновлён");
 
         return CampaignResponse.from(campaignRepository.save(campaign));
     }
@@ -90,7 +102,9 @@ public class CampaignWorkflowService {
         Campaign campaign = findCampaign(campaignId);
         requireStatus(campaign, CampaignStatus.DRAFT);
 
-        campaign.setConfiguration(request.configuration());
+        campaign.setBudgetAmount(request.budgetAmount());
+        campaign.setStartAt(request.startAt());
+        campaign.setEndAt(request.endAt());
         transition(
             campaign,
             CampaignStatus.CONFIGURED,
@@ -105,7 +119,18 @@ public class CampaignWorkflowService {
         Campaign campaign = findCampaign(campaignId);
         requireStatus(campaign, CampaignStatus.CONFIGURED, CampaignStatus.CREATIVES_UPLOADED);
 
-        campaign.setCreatives(request.creatives());
+        campaign.getCreatives().clear();
+        List<Creative> creatives = request.creatives().stream()
+            .map(creativeRequest -> {
+                Creative creative = new Creative();
+                creative.setName(creativeRequest.name());
+                creative.setType(creativeRequest.type());
+                creative.setCampaign(campaign);
+                return creative;
+            })
+            .toList();
+        campaign.getCreatives().addAll(creatives);
+
         transition(
             campaign,
             CampaignStatus.CREATIVES_UPLOADED,

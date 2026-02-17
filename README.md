@@ -43,8 +43,9 @@ docker compose up --build -d
 Базовый префикс: `/api/campaigns`
 
 - `POST /api/campaigns` - создать черновик кампании
+- `PUT /api/campaigns/{id}` - обновить черновик кампании (только в статусе `DRAFT`)
 - `POST /api/campaigns/{id}/configure` - настроить кампанию
-- `POST /api/campaigns/{id}/creatives` - загрузить креативы
+- `POST /api/campaigns/{id}/creatives` - загрузить массив креативов (до 10 штук)
 - `POST /api/campaigns/{id}/submit` - отправить на проверку
 - `POST /api/campaigns/{id}/validation` - результат авто-валидации
 - `POST /api/campaigns/{id}/validation/fix` - исправить ошибки валидации

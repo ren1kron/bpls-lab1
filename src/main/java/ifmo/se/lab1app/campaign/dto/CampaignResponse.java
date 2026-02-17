@@ -10,13 +10,12 @@ import java.util.List;
 public record CampaignResponse(
     Long id,
     String name,
-    String advertiserId,
     CampaignStatus status,
     BigDecimal budgetAmount,
     LocalDateTime startAt,
     LocalDateTime endAt,
     String configuration,
-    String creatives,
+    List<CreativeResponse> creatives,
     String validationComment,
     String moderationComment,
     Boolean budgetFormed,
@@ -31,17 +30,19 @@ public record CampaignResponse(
             .sorted(Comparator.comparingInt(invoice -> -invoice.getRevision()))
             .map(InvoiceResponse::from)
             .toList();
+        List<CreativeResponse> creativeResponses = campaign.getCreatives().stream()
+            .map(CreativeResponse::from)
+            .toList();
 
         return new CampaignResponse(
             campaign.getId(),
             campaign.getName(),
-            campaign.getAdvertiserId(),
             campaign.getStatus(),
             campaign.getBudgetAmount(),
             campaign.getStartAt(),
             campaign.getEndAt(),
             campaign.getConfiguration(),
-            campaign.getCreatives(),
+            creativeResponses,
             campaign.getValidationComment(),
             campaign.getModerationComment(),
             campaign.getBudgetFormed(),

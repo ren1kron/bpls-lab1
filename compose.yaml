@@ -12,7 +12,7 @@ services:
       DB_USERNAME: lab1
       DB_PASSWORD: lab1
     ports:
-      - "8080:8080"
+      - "26125:26125"
     restart: unless-stopped
 
   postgres:
@@ -23,7 +23,7 @@ services:
       POSTGRES_USER: lab1
       POSTGRES_PASSWORD: lab1
     ports:
-      - "5432:5432"
+      - "6262:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:

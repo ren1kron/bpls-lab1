@@ -1,0 +1,526 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" id="Definitions_Aviasales_Monetization_Lanes_RU" targetNamespace="http://example.com/aviasales/monetization" exporter="Camunda Modeler" exporterVersion="5.43.1">
+  <bpmn:message id="Message_BudgetExhausted" name="Бюджет исчерпан" />
+  <bpmn:message id="Message_PauseRequested" name="Запрошена пауза" />
+  <bpmn:collaboration id="Collaboration_Aviasales">
+    <bpmn:participant id="Participant_Aviasales" name="Aviasales — Админка монетизации" processRef="Process_CampaignLaunch" />
+    <bpmn:participant id="Participant_1d2ew2t" name="ЮКасса" processRef="Process_199wqr0" />
+    <bpmn:messageFlow id="Flow_0zj91l1" sourceRef="Activity_191l1ni" targetRef="Participant_1d2ew2t" />
+    <bpmn:messageFlow id="Flow_0zc9esg" sourceRef="Activity_02zbr4x" targetRef="Participant_1d2ew2t" />
+    <bpmn:messageFlow id="Flow_1u2hrju" sourceRef="Participant_1d2ew2t" targetRef="Activity_02zbr4x" />
+    <bpmn:messageFlow id="Flow_1pe3sum" sourceRef="Participant_1d2ew2t" targetRef="Activity_1biu9rw" />
+  </bpmn:collaboration>
+  <bpmn:process id="Process_CampaignLaunch" name="Запуск рекламной кампании" isExecutable="false">
+    <bpmn:laneSet id="LaneSet_Main">
+      <bpmn:lane id="Lane_Moderation" name="Модератор">
+        <bpmn:flowNodeRef>UserTask_ManualModeration</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gateway_ModerationApproved</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Activity_14ilalt</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gateway_0lae4s9</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Lane_System" name="Система (Ad Platform)">
+        <bpmn:flowNodeRef>Activity_02zbr4x</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>IntermediateMessage_PauseRequested</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>EventBasedGateway_WaitEndSignal</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>IntermediateTimer_EndAt</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>IntermediateMessage_BudgetExhausted</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>ServiceTask_PauseCampaign</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>ServiceTask_StopCampaign</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>EndEvent_CampaignFinished</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>ServiceTask_ActivateCampaign</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>IntermediateTimer_WaitStart</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_FreezeCampaign</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gateway_0t9euku</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Activity_1biu9rw</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Lane_Manager" name="Клиент">
+        <bpmn:flowNodeRef>UserTask_CreateDraft</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>StartEvent_CreateCampaign</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>UserTask_UploadCreatives</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>UserTask_SubmitForCheck</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>UserTask_FixAfterRejection</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Activity_191l1ni</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gateway_ResumeOrStop</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>UserTask_DecideResumeOrStop</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gateway_1szdbtx</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Activity_17kbayu</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>UserTask_ConfigureCampaign</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Activity_09gljea</bpmn:flowNodeRef>
+      </bpmn:lane>
+    </bpmn:laneSet>
+    <bpmn:userTask id="UserTask_CreateDraft" name="Создать черновик кампании">
+      <bpmn:outgoing>Flow_05</bpmn:outgoing>
+      <bpmn:outgoing>Flow_0473tlb</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:startEvent id="StartEvent_CreateCampaign" name="Старт" />
+    <bpmn:userTask id="UserTask_UploadCreatives" name="Загрузить креативы" />
+    <bpmn:userTask id="UserTask_SubmitForCheck" name="Отправить на проверку">
+      <bpmn:outgoing>Flow_0gpfg6c</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="UserTask_ManualModeration" name="Ручная модерация">
+      <bpmn:incoming>Flow_0gpfg6c</bpmn:incoming>
+    </bpmn:userTask>
+    <bpmn:exclusiveGateway id="Gateway_ModerationApproved" name="Одобрено?" />
+    <bpmn:userTask id="UserTask_FixAfterRejection" name="Доработать по замечаниям модератора" />
+    <bpmn:userTask id="Activity_191l1ni" name="Оплатить">
+      <bpmn:incoming>Flow_0u8941y</bpmn:incoming>
+    </bpmn:userTask>
+    <bpmn:serviceTask id="Activity_02zbr4x" name="Сформировать счёт">
+      <bpmn:incoming>Flow_10_OK</bpmn:incoming>
+      <bpmn:incoming>Flow_1i7cs46</bpmn:incoming>
+      <bpmn:outgoing>Flow_0u8941y</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:intermediateCatchEvent id="IntermediateMessage_PauseRequested" name="Запрошена пауза">
+      <bpmn:messageEventDefinition messageRef="Message_PauseRequested" />
+    </bpmn:intermediateCatchEvent>
+    <bpmn:eventBasedGateway id="EventBasedGateway_WaitEndSignal" name="Ожидание условия завершения" />
+    <bpmn:intermediateCatchEvent id="IntermediateTimer_EndAt" name="Достигнуто endAt">
+      <bpmn:timerEventDefinition>
+        <bpmn:timeDate xsi:type="bpmn:tFormalExpression">${endAt}</bpmn:timeDate>
+      </bpmn:timerEventDefinition>
+    </bpmn:intermediateCatchEvent>
+    <bpmn:intermediateCatchEvent id="IntermediateMessage_BudgetExhausted" name="Бюджет исчерпан">
+      <bpmn:messageEventDefinition messageRef="Message_BudgetExhausted" />
+    </bpmn:intermediateCatchEvent>
+    <bpmn:serviceTask id="ServiceTask_PauseCampaign" name="Поставить на паузу" />
+    <bpmn:serviceTask id="ServiceTask_StopCampaign" name="Остановить кампанию" />
+    <bpmn:endEvent id="EndEvent_CampaignFinished" name="Завершение">
+      <bpmn:incoming>Flow_0kgu25i</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:serviceTask id="ServiceTask_ActivateCampaign" name="Активировать кампанию (публикация)">
+      <bpmn:incoming>Flow_1du989t</bpmn:incoming>
+    </bpmn:serviceTask>
+    <bpmn:intermediateCatchEvent id="IntermediateTimer_WaitStart" name="Ожидание времени старта (startAt)">
+      <bpmn:incoming>Flow_1dez9rp</bpmn:incoming>
+      <bpmn:incoming>Flow_1xcpjpr</bpmn:incoming>
+      <bpmn:timerEventDefinition>
+        <bpmn:timeDate xsi:type="bpmn:tFormalExpression">${startAt}</bpmn:timeDate>
+      </bpmn:timerEventDefinition>
+    </bpmn:intermediateCatchEvent>
+    <bpmn:serviceTask id="Activity_14ilalt" name="Проверить оплату счёта">
+      <bpmn:incoming>Flow_0bwdvy5</bpmn:incoming>
+      <bpmn:outgoing>Flow_15dbjz4</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:exclusiveGateway id="Gateway_0lae4s9" name="Бюджет сформирован?">
+      <bpmn:incoming>Flow_15dbjz4</bpmn:incoming>
+      <bpmn:outgoing>Flow_1du989t</bpmn:outgoing>
+      <bpmn:outgoing>Flow_1dez9rp</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:exclusiveGateway id="Gateway_ResumeOrStop" name="Возобновить?">
+      <bpmn:outgoing>Flow_0bwdvy5</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:userTask id="UserTask_DecideResumeOrStop" name="Решить: запустить или завершить" />
+    <bpmn:serviceTask id="Task_FreezeCampaign" name="Заморозить кампанию (нет оплаты)">
+      <bpmn:incoming>Flow_0ojquqe</bpmn:incoming>
+      <bpmn:outgoing>Flow_0mqgsz6</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:exclusiveGateway id="Gateway_1szdbtx" name="Отменить кампанию?">
+      <bpmn:incoming>Flow_126oxq5</bpmn:incoming>
+      <bpmn:outgoing>Flow_0kgu25i</bpmn:outgoing>
+      <bpmn:outgoing>Flow_1i7cs46</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:userTask id="Activity_17kbayu" name="Повторить попытку оплаты или отменить?">
+      <bpmn:incoming>Flow_0mqgsz6</bpmn:incoming>
+      <bpmn:outgoing>Flow_126oxq5</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:sequenceFlow id="Flow_01" sourceRef="StartEvent_CreateCampaign" targetRef="UserTask_CreateDraft" />
+    <bpmn:sequenceFlow id="Flow_05" sourceRef="UserTask_CreateDraft" targetRef="UserTask_ConfigureCampaign" />
+    <bpmn:sequenceFlow id="Flow_03" sourceRef="UserTask_ConfigureCampaign" targetRef="UserTask_UploadCreatives" />
+    <bpmn:sequenceFlow id="Flow_04" sourceRef="UserTask_UploadCreatives" targetRef="UserTask_SubmitForCheck" />
+    <bpmn:sequenceFlow id="Flow_11_RETRY" sourceRef="UserTask_FixAfterRejection" targetRef="UserTask_SubmitForCheck" />
+    <bpmn:sequenceFlow id="Flow_0gpfg6c" sourceRef="UserTask_SubmitForCheck" targetRef="UserTask_ManualModeration" />
+    <bpmn:sequenceFlow id="Flow_09" sourceRef="UserTask_ManualModeration" targetRef="Gateway_ModerationApproved" />
+    <bpmn:sequenceFlow id="Flow_10_OK" sourceRef="Gateway_ModerationApproved" targetRef="Activity_02zbr4x">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${moderationApproved == true}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_10_REJECT" sourceRef="Gateway_ModerationApproved" targetRef="UserTask_FixAfterRejection">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${moderationApproved == false}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_0u8941y" sourceRef="Activity_02zbr4x" targetRef="Activity_191l1ni" />
+    <bpmn:sequenceFlow id="Flow_1i7cs46" sourceRef="Gateway_1szdbtx" targetRef="Activity_02zbr4x" />
+    <bpmn:sequenceFlow id="Flow_19_PAUSE" sourceRef="EventBasedGateway_WaitEndSignal" targetRef="IntermediateMessage_PauseRequested" />
+    <bpmn:sequenceFlow id="Flow_22_PAUSE" sourceRef="IntermediateMessage_PauseRequested" targetRef="ServiceTask_PauseCampaign" />
+    <bpmn:sequenceFlow id="Flow_16" sourceRef="ServiceTask_ActivateCampaign" targetRef="EventBasedGateway_WaitEndSignal" />
+    <bpmn:sequenceFlow id="Flow_17_TIMER" sourceRef="EventBasedGateway_WaitEndSignal" targetRef="IntermediateTimer_EndAt" />
+    <bpmn:sequenceFlow id="Flow_18_BUDGET" sourceRef="EventBasedGateway_WaitEndSignal" targetRef="IntermediateMessage_BudgetExhausted" />
+    <bpmn:sequenceFlow id="Flow_20_TIMER_STOP" sourceRef="IntermediateTimer_EndAt" targetRef="ServiceTask_StopCampaign" />
+    <bpmn:sequenceFlow id="Flow_21_BUDGET_STOP" sourceRef="IntermediateMessage_BudgetExhausted" targetRef="ServiceTask_StopCampaign" />
+    <bpmn:sequenceFlow id="Flow_23_DECIDE" sourceRef="ServiceTask_PauseCampaign" targetRef="UserTask_DecideResumeOrStop" />
+    <bpmn:sequenceFlow id="Flow_26_STOP" sourceRef="Gateway_ResumeOrStop" targetRef="ServiceTask_StopCampaign">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${resume == false}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_28_END" sourceRef="ServiceTask_StopCampaign" targetRef="EndEvent_CampaignFinished" />
+    <bpmn:sequenceFlow id="Flow_0kgu25i" sourceRef="Gateway_1szdbtx" targetRef="EndEvent_CampaignFinished" />
+    <bpmn:sequenceFlow id="Flow_15" sourceRef="IntermediateTimer_WaitStart" targetRef="ServiceTask_ActivateCampaign" />
+    <bpmn:sequenceFlow id="Flow_1du989t" sourceRef="Gateway_0lae4s9" targetRef="ServiceTask_ActivateCampaign" />
+    <bpmn:sequenceFlow id="Flow_1dez9rp" sourceRef="Gateway_0lae4s9" targetRef="IntermediateTimer_WaitStart" />
+    <bpmn:sequenceFlow id="Flow_0bwdvy5" sourceRef="Gateway_ResumeOrStop" targetRef="Activity_14ilalt" />
+    <bpmn:sequenceFlow id="Flow_15dbjz4" sourceRef="Activity_14ilalt" targetRef="Gateway_0lae4s9" />
+    <bpmn:sequenceFlow id="Flow_24_TO_GW" sourceRef="UserTask_DecideResumeOrStop" targetRef="Gateway_ResumeOrStop" />
+    <bpmn:sequenceFlow id="Flow_1xcpjpr" sourceRef="Gateway_0t9euku" targetRef="IntermediateTimer_WaitStart" />
+    <bpmn:sequenceFlow id="Flow_0ojquqe" sourceRef="Gateway_0t9euku" targetRef="Task_FreezeCampaign" />
+    <bpmn:sequenceFlow id="Flow_0mqgsz6" sourceRef="Task_FreezeCampaign" targetRef="Activity_17kbayu" />
+    <bpmn:sequenceFlow id="Flow_126oxq5" sourceRef="Activity_17kbayu" targetRef="Gateway_1szdbtx" />
+    <bpmn:userTask id="UserTask_ConfigureCampaign" name="Настроить кампанию (плейсменты/таргетинг/расписание/бюджет)">
+      <bpmn:incoming>Flow_05</bpmn:incoming>
+      <bpmn:incoming>Flow_0l3ere0</bpmn:incoming>
+    </bpmn:userTask>
+    <bpmn:exclusiveGateway id="Gateway_0t9euku" name="Оплачено?">
+      <bpmn:incoming>Flow_1fjbp9c</bpmn:incoming>
+      <bpmn:outgoing>Flow_1xcpjpr</bpmn:outgoing>
+      <bpmn:outgoing>Flow_0ojquqe</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:task id="Activity_1biu9rw" name="Получить статус оплаты">
+      <bpmn:outgoing>Flow_1fjbp9c</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:sequenceFlow id="Flow_1fjbp9c" sourceRef="Activity_1biu9rw" targetRef="Gateway_0t9euku" />
+    <bpmn:userTask id="Activity_09gljea" name="Обновить черновик кампании">
+      <bpmn:incoming>Flow_1b4auer</bpmn:incoming>
+      <bpmn:incoming>Flow_0473tlb</bpmn:incoming>
+      <bpmn:outgoing>Flow_1b4auer</bpmn:outgoing>
+      <bpmn:outgoing>Flow_0l3ere0</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:sequenceFlow id="Flow_1b4auer" sourceRef="Activity_09gljea" targetRef="Activity_09gljea" />
+    <bpmn:sequenceFlow id="Flow_0473tlb" sourceRef="UserTask_CreateDraft" targetRef="Activity_09gljea" />
+    <bpmn:sequenceFlow id="Flow_0l3ere0" sourceRef="Activity_09gljea" targetRef="UserTask_ConfigureCampaign" />
+  </bpmn:process>
+  <bpmn:message id="Message_PaymentReceived" name="Оплата получена" />
+  <bpmn:process id="Process_199wqr0" isExecutable="false">
+    <bpmn:laneSet id="LaneSet_003yh15" />
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_Aviasales_Lanes">
+    <bpmndi:BPMNPlane id="BPMNPlane_Aviasales" bpmnElement="Collaboration_Aviasales">
+      <bpmndi:BPMNShape id="Shape_Participant_Aviasales" bpmnElement="Participant_Aviasales" isHorizontal="true">
+        <dc:Bounds x="155" y="250" width="4975" height="1340" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Lane_Manager" bpmnElement="Lane_Manager" isHorizontal="true">
+        <dc:Bounds x="205" y="250" width="4925" height="360" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Lane_System" bpmnElement="Lane_System" isHorizontal="true">
+        <dc:Bounds x="205" y="610" width="4925" height="415" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Lane_Moderation" bpmnElement="Lane_Moderation" isHorizontal="true">
+        <dc:Bounds x="205" y="1025" width="4925" height="565" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_CreateDraft" bpmnElement="UserTask_CreateDraft">
+        <dc:Bounds x="335" y="340" width="210" height="80" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Start" bpmnElement="StartEvent_CreateCampaign">
+        <dc:Bounds x="255" y="362" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="258" y="398" width="30" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Upload" bpmnElement="UserTask_UploadCreatives">
+        <dc:Bounds x="1040" y="340" width="220" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Submit" bpmnElement="UserTask_SubmitForCheck">
+        <dc:Bounds x="1350" y="340" width="220" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Moderation" bpmnElement="UserTask_ManualModeration">
+        <dc:Bounds x="1340" y="1080" width="240" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_GwModeration" bpmnElement="Gateway_ModerationApproved" isMarkerVisible="true">
+        <dc:Bounds x="2035" y="1095" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2031" y="1155" width="58" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_FixAfterReject" bpmnElement="UserTask_FixAfterRejection">
+        <dc:Bounds x="1900" y="340" width="320" height="80" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="BPMNShape_11we0xu" bpmnElement="Activity_191l1ni">
+        <dc:Bounds x="2310" y="340" width="320" height="80" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="BPMNShape_0sismef" bpmnElement="Activity_02zbr4x">
+        <dc:Bounds x="2340" y="800" width="260" height="80" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_PauseReq" bpmnElement="IntermediateMessage_PauseRequested">
+        <dc:Bounds x="3902" y="642" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="3875" y="688" width="90" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_EventGw" bpmnElement="EventBasedGateway_WaitEndSignal">
+        <dc:Bounds x="3815" y="910" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="3848" y="867" width="63" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_EndAt" bpmnElement="IntermediateTimer_EndAt">
+        <dc:Bounds x="3902" y="767" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="3875" y="743" width="89" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_BudgetExh" bpmnElement="IntermediateMessage_BudgetExhausted">
+        <dc:Bounds x="4042" y="914" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="4036" y="877" width="48" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Pause" bpmnElement="ServiceTask_PauseCampaign">
+        <dc:Bounds x="4090" y="620" width="240" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Stop" bpmnElement="ServiceTask_StopCampaign">
+        <dc:Bounds x="4380" y="872" width="240" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_End" bpmnElement="EndEvent_CampaignFinished">
+        <dc:Bounds x="4742" y="894" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="4728" y="943" width="64" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Activate" bpmnElement="ServiceTask_ActivateCampaign">
+        <dc:Bounds x="3510" y="895" width="240" height="80" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_WaitStart" bpmnElement="IntermediateTimer_WaitStart">
+        <dc:Bounds x="3452" y="917" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="3429" y="867" width="81" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="BPMNShape_0jbo3zk" bpmnElement="Activity_14ilalt">
+        <dc:Bounds x="4760" y="1250" width="260" height="80" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="BPMNShape_110h59g" bpmnElement="Gateway_0lae4s9" isMarkerVisible="true">
+        <dc:Bounds x="4595" y="1265" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="4581" y="1236" width="77" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_GwResume" bpmnElement="Gateway_ResumeOrStop" isMarkerVisible="true">
+        <dc:Bounds x="4475" y="495" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="4464" y="471" width="72" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Decide" bpmnElement="UserTask_DecideResumeOrStop">
+        <dc:Bounds x="4090" y="480" width="280" height="80" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Freeze" bpmnElement="Task_FreezeCampaign">
+        <dc:Bounds x="3510" y="620" width="260" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="BPMNShape_06cu5sb" bpmnElement="Gateway_1szdbtx" isMarkerVisible="true">
+        <dc:Bounds x="3615" y="315" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="3661" y="306" width="58" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="BPMNShape_053nd97" bpmnElement="Activity_17kbayu">
+        <dc:Bounds x="3500" y="450" width="280" height="80" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Configure" bpmnElement="UserTask_ConfigureCampaign">
+        <dc:Bounds x="600" y="340" width="360" height="80" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="BPMNShape_0rvhiuw" bpmnElement="Gateway_0t9euku" isMarkerVisible="true">
+        <dc:Bounds x="2955" y="735" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="3014.5" y="753" width="57" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_1biu9rw_di" bpmnElement="Activity_1biu9rw">
+        <dc:Bounds x="2780" y="720" width="100" height="80" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="BPMNShape_13pixfc" bpmnElement="Activity_09gljea">
+        <dc:Bounds x="465" y="450" width="210" height="80" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Edge_Flow_01" bpmnElement="Flow_01">
+        <di:waypoint x="291" y="380" />
+        <di:waypoint x="335" y="380" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_05" bpmnElement="Flow_05">
+        <di:waypoint x="545" y="380" />
+        <di:waypoint x="600" y="380" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_03" bpmnElement="Flow_03">
+        <di:waypoint x="960" y="380" />
+        <di:waypoint x="1040" y="380" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_04" bpmnElement="Flow_04">
+        <di:waypoint x="1260" y="380" />
+        <di:waypoint x="1350" y="380" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_11_RETRY" bpmnElement="Flow_11_RETRY">
+        <di:waypoint x="1900" y="380" />
+        <di:waypoint x="1570" y="380" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0gpfg6c_di" bpmnElement="Flow_0gpfg6c">
+        <di:waypoint x="1470" y="420" />
+        <di:waypoint x="1470" y="1080" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_09" bpmnElement="Flow_09">
+        <di:waypoint x="1580" y="1120" />
+        <di:waypoint x="2035" y="1120" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_10_OK" bpmnElement="Flow_10_OK">
+        <di:waypoint x="2085" y="1120" />
+        <di:waypoint x="2470" y="1120" />
+        <di:waypoint x="2470" y="880" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_10_REJECT" bpmnElement="Flow_10_REJECT">
+        <di:waypoint x="2060" y="1095" />
+        <di:waypoint x="2060" y="420" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0u8941y_di" bpmnElement="Flow_0u8941y">
+        <di:waypoint x="2470" y="800" />
+        <di:waypoint x="2470" y="420" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_1i7cs46_di" bpmnElement="Flow_1i7cs46">
+        <di:waypoint x="3615" y="340" />
+        <di:waypoint x="2740" y="340" />
+        <di:waypoint x="2740" y="840" />
+        <di:waypoint x="2600" y="840" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_19_PAUSE" bpmnElement="Flow_19_PAUSE">
+        <di:waypoint x="3840" y="910" />
+        <di:waypoint x="3840" y="660" />
+        <di:waypoint x="3902" y="660" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_22_PAUSE" bpmnElement="Flow_22_PAUSE">
+        <di:waypoint x="3938" y="660" />
+        <di:waypoint x="4090" y="660" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_16" bpmnElement="Flow_16">
+        <di:waypoint x="3750" y="935" />
+        <di:waypoint x="3815" y="935" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_17_TIMER" bpmnElement="Flow_17_TIMER">
+        <di:waypoint x="3850" y="920" />
+        <di:waypoint x="3920" y="920" />
+        <di:waypoint x="3920" y="803" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_18_BUDGET" bpmnElement="Flow_18_BUDGET">
+        <di:waypoint x="3865" y="935" />
+        <di:waypoint x="4042" y="935" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_20_TIMER_STOP" bpmnElement="Flow_20_TIMER_STOP">
+        <di:waypoint x="3938" y="783" />
+        <di:waypoint x="4480" y="783" />
+        <di:waypoint x="4480" y="870" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_21_BUDGET_STOP" bpmnElement="Flow_21_BUDGET_STOP">
+        <di:waypoint x="4078" y="932" />
+        <di:waypoint x="4380" y="932" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_23_DECIDE" bpmnElement="Flow_23_DECIDE">
+        <di:waypoint x="4210" y="620" />
+        <di:waypoint x="4210" y="560" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_26_STOP" bpmnElement="Flow_26_STOP">
+        <di:waypoint x="4500" y="545" />
+        <di:waypoint x="4500" y="872" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_28_END" bpmnElement="Flow_28_END">
+        <di:waypoint x="4620" y="912" />
+        <di:waypoint x="4742" y="912" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0kgu25i_di" bpmnElement="Flow_0kgu25i">
+        <di:waypoint x="3665" y="340" />
+        <di:waypoint x="4760" y="350" />
+        <di:waypoint x="4760" y="894" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_15" bpmnElement="Flow_15">
+        <di:waypoint x="3488" y="935" />
+        <di:waypoint x="3510" y="935" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_1du989t_di" bpmnElement="Flow_1du989t">
+        <di:waypoint x="4595" y="1290" />
+        <di:waypoint x="3630" y="1290" />
+        <di:waypoint x="3630" y="975" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_1dez9rp_di" bpmnElement="Flow_1dez9rp">
+        <di:waypoint x="4620" y="1315" />
+        <di:waypoint x="4620" y="1580" />
+        <di:waypoint x="3470" y="1580" />
+        <di:waypoint x="3470" y="953" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0bwdvy5_di" bpmnElement="Flow_0bwdvy5">
+        <di:waypoint x="4525" y="520" />
+        <di:waypoint x="4900" y="520" />
+        <di:waypoint x="4900" y="1250" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_15dbjz4_di" bpmnElement="Flow_15dbjz4">
+        <di:waypoint x="4760" y="1290" />
+        <di:waypoint x="4645" y="1290" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_24_TO_GW" bpmnElement="Flow_24_TO_GW">
+        <di:waypoint x="4370" y="520" />
+        <di:waypoint x="4475" y="520" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_1xcpjpr_di" bpmnElement="Flow_1xcpjpr">
+        <di:waypoint x="2980" y="785" />
+        <di:waypoint x="2980" y="935" />
+        <di:waypoint x="3452" y="935" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0ojquqe_di" bpmnElement="Flow_0ojquqe">
+        <di:waypoint x="2980" y="735" />
+        <di:waypoint x="2980" y="660" />
+        <di:waypoint x="3510" y="660" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0mqgsz6_di" bpmnElement="Flow_0mqgsz6">
+        <di:waypoint x="3640" y="620" />
+        <di:waypoint x="3640" y="530" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_126oxq5_di" bpmnElement="Flow_126oxq5">
+        <di:waypoint x="3640" y="450" />
+        <di:waypoint x="3640" y="365" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_1fjbp9c_di" bpmnElement="Flow_1fjbp9c">
+        <di:waypoint x="2880" y="760" />
+        <di:waypoint x="2955" y="760" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_1b4auer_di" bpmnElement="Flow_1b4auer">
+        <di:waypoint x="550" y="530" />
+        <di:waypoint x="550" y="560" />
+        <di:waypoint x="590" y="560" />
+        <di:waypoint x="590" y="530" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0473tlb_di" bpmnElement="Flow_0473tlb">
+        <di:waypoint x="440" y="420" />
+        <di:waypoint x="440" y="490" />
+        <di:waypoint x="465" y="490" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0l3ere0_di" bpmnElement="Flow_0l3ere0">
+        <di:waypoint x="675" y="490" />
+        <di:waypoint x="700" y="490" />
+        <di:waypoint x="700" y="420" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="Participant_1d2ew2t_di" bpmnElement="Participant_1d2ew2t" isHorizontal="true">
+        <dc:Bounds x="155" y="81" width="4975" height="60" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Flow_0zj91l1_di" bpmnElement="Flow_0zj91l1">
+        <di:waypoint x="2470" y="340" />
+        <di:waypoint x="2470" y="141" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0zc9esg_di" bpmnElement="Flow_0zc9esg">
+        <di:waypoint x="2340" y="830" />
+        <di:waypoint x="2270" y="830" />
+        <di:waypoint x="2270" y="141" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_1u2hrju_di" bpmnElement="Flow_1u2hrju">
+        <di:waypoint x="2250" y="141" />
+        <di:waypoint x="2250" y="860" />
+        <di:waypoint x="2340" y="860" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_1pe3sum_di" bpmnElement="Flow_1pe3sum">
+        <di:waypoint x="2830" y="141" />
+        <di:waypoint x="2830" y="720" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

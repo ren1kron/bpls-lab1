@@ -1,7 +1,13 @@
 package ifmo.se.lab1app.campaign.api;
 
-import ifmo.se.lab1app.campaign.dto.*;
+import ifmo.se.lab1app.campaign.dto.CampaignHistoryEventResponse;
+import ifmo.se.lab1app.campaign.dto.CampaignResponse;
+import ifmo.se.lab1app.campaign.dto.ConfigureCampaignRequest;
 import ifmo.se.lab1app.campaign.dto.DraftCampaignRequest;
+import ifmo.se.lab1app.campaign.dto.ModerationDecisionRequest;
+import ifmo.se.lab1app.campaign.dto.PaymentReceivedRequest;
+import ifmo.se.lab1app.campaign.dto.ResumeDecisionRequest;
+import ifmo.se.lab1app.campaign.dto.UploadCreativesRequest;
 import ifmo.se.lab1app.campaign.service.CampaignWorkflowService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -24,7 +30,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RequiredArgsConstructor
 @Tag(
     name = "Campaign Workflow",
-    description = "Операции управления жизненным циклом рекламной кампании по BPMN-процессу Process_CampaignLaunch"
+    description = "Операции управления жизненным циклом рекламной кампании Aviasales"
 )
 public class CampaignController {
 
@@ -92,31 +98,12 @@ public class CampaignController {
     }
 
     @PostMapping("/{campaignId}/submit")
-    @Operation(summary = "Отправить кампанию на проверку")
+    @Operation(summary = "Отправить кампанию на проверку (с авто-валидацией)")
     public CampaignResponse submitForCheck(
         @Parameter(description = "Идентификатор экземпляра процесса (campaignId)")
         @PathVariable Long campaignId
     ) {
         return campaignWorkflowService.submitForCheck(campaignId);
-    }
-
-    @PostMapping("/{campaignId}/validation")
-    @Operation(summary = "Зафиксировать результат автоматической валидации")
-    public CampaignResponse processValidation(
-        @Parameter(description = "Идентификатор экземпляра процесса (campaignId)")
-        @PathVariable Long campaignId,
-        @Valid @RequestBody ValidationResultRequest request
-    ) {
-        return campaignWorkflowService.processValidationResult(campaignId, request);
-    }
-
-    @PostMapping("/{campaignId}/validation/fix")
-    @Operation(summary = "Исправить ошибки валидации")
-    public CampaignResponse fixValidationIssues(
-        @Parameter(description = "Идентификатор экземпляра процесса (campaignId)")
-        @PathVariable Long campaignId
-    ) {
-        return campaignWorkflowService.fixValidationIssues(campaignId);
     }
 
     @PostMapping("/{campaignId}/moderation")

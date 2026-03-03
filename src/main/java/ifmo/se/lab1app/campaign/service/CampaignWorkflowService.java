@@ -8,7 +8,6 @@ import ifmo.se.lab1app.campaign.dto.ModerationDecisionRequest;
 import ifmo.se.lab1app.campaign.dto.PaymentReceivedRequest;
 import ifmo.se.lab1app.campaign.dto.ResumeDecisionRequest;
 import ifmo.se.lab1app.campaign.dto.UploadCreativesRequest;
-import ifmo.se.lab1app.campaign.dto.ValidationResultRequest;
 import ifmo.se.lab1app.campaign.exception.InvalidStateException;
 import ifmo.se.lab1app.campaign.exception.NotFoundException;
 import ifmo.se.lab1app.campaign.model.Campaign;
@@ -35,6 +34,11 @@ import org.springframework.transaction.annotation.Transactional;
 public class CampaignWorkflowService {
 
     private static final int DEFAULT_INVOICE_DUE_DAYS = 7;
+    private static final Set<CampaignStatus> statuses = EnumSet.of(
+            CampaignStatus.WAITING_PAYMENT,
+            CampaignStatus.WAITING_START,
+            CampaignStatus.ACTIVE
+    );
 
     private final CampaignRepository campaignRepository;
     private final CampaignHistoryEventRepository historyEventRepository;
@@ -58,6 +62,7 @@ public class CampaignWorkflowService {
         campaign.setStatus(CampaignStatus.DRAFT);
 
         addHistory(campaign, CampaignEventType.CAMPAIGN_CREATED, "Черновик кампании создан");
+        addHistory(campaign, CampaignEventType.AUTO_VALIDATION_PASSED, "Автоматическая валидация черновика пройдена");
 
         return CampaignResponse.from(campaignRepository.save(campaign));
     }
@@ -74,6 +79,7 @@ public class CampaignWorkflowService {
         campaign.setNotes(request.notes());
 
         addHistory(campaign, CampaignEventType.CAMPAIGN_DRAFT_UPDATED, "Черновик кампании обновлён");
+        addHistory(campaign, CampaignEventType.AUTO_VALIDATION_PASSED, "Автоматическая валидация черновика пройдена");
 
         return CampaignResponse.from(campaignRepository.save(campaign));
     }
@@ -145,50 +151,12 @@ public class CampaignWorkflowService {
         Campaign campaign = findCampaign(campaignId);
         requireStatus(campaign, CampaignStatus.CREATIVES_UPLOADED);
 
+        addHistory(campaign, CampaignEventType.SUBMITTED_FOR_CHECK, "Кампания отправлена на проверку");
         transition(
             campaign,
-            CampaignStatus.SUBMITTED_FOR_CHECK,
-            CampaignEventType.SUBMITTED_FOR_CHECK,
-            "Кампания отправлена на автоматическую проверку"
-        );
-
-        return CampaignResponse.from(campaignRepository.save(campaign));
-    }
-
-    public CampaignResponse processValidationResult(Long campaignId, ValidationResultRequest request) {
-        Campaign campaign = findCampaign(campaignId);
-        requireStatus(campaign, CampaignStatus.SUBMITTED_FOR_CHECK);
-
-        campaign.setValidationComment(request.comment());
-
-        if (Boolean.TRUE.equals(request.validationOk())) {
-            transition(
-                campaign,
-                CampaignStatus.ON_MODERATION,
-                CampaignEventType.AUTO_VALIDATION_PASSED,
-                nonEmptyOrDefault(request.comment(), "Автоматическая валидация пройдена")
-            );
-        } else {
-            transition(
-                campaign,
-                CampaignStatus.VALIDATION_FAILED,
-                CampaignEventType.AUTO_VALIDATION_FAILED,
-                nonEmptyOrDefault(request.comment(), "Найдены ошибки автоматической валидации")
-            );
-        }
-
-        return CampaignResponse.from(campaignRepository.save(campaign));
-    }
-
-    public CampaignResponse fixValidationIssues(Long campaignId) {
-        Campaign campaign = findCampaign(campaignId);
-        requireStatus(campaign, CampaignStatus.VALIDATION_FAILED);
-
-        transition(
-            campaign,
-            CampaignStatus.CREATIVES_UPLOADED,
-            CampaignEventType.VALIDATION_ISSUES_FIXED,
-            "Ошибки валидации исправлены"
+            CampaignStatus.ON_MODERATION,
+            CampaignEventType.AUTO_VALIDATION_PASSED,
+            "Автоматическая валидация пройдена, кампания отправлена на модерацию"
         );
 
         return CampaignResponse.from(campaignRepository.save(campaign));
@@ -327,12 +295,6 @@ public class CampaignWorkflowService {
     }
 
     public void processTimersForAllCampaigns() {
-        Set<CampaignStatus> statuses = EnumSet.of(
-            CampaignStatus.WAITING_PAYMENT,
-            CampaignStatus.WAITING_START,
-            CampaignStatus.ACTIVE
-        );
-
         List<Campaign> campaigns = campaignRepository.findByStatusIn(statuses);
         LocalDateTime now = LocalDateTime.now();
         for (Campaign campaign : campaigns) {

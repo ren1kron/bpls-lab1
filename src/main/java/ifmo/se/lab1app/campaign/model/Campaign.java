@@ -38,15 +38,18 @@ public class Campaign {
     @Column(nullable = false)
     private String name;
 
+    @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private CampaignObjective objective;
 
+    @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private CampaignType type;
 
     @Column(nullable = false)
     private String url;
 
+    @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private StartMode startMode;
 

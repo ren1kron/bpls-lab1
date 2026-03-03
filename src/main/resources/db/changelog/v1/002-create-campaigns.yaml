@@ -1,0 +1,85 @@
+databaseChangeLog:
+  - changeSet:
+      id: 002-create-campaigns
+      author: lab1-app
+      changes:
+        - createTable:
+            tableName: campaigns
+            columns:
+              - column:
+                  name: id
+                  type: bigint
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: name
+                  type: varchar(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: objective
+                  type: varchar(50)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: type
+                  type: varchar(50)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: url
+                  type: varchar(2048)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: start_mode
+                  type: varchar(50)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: status
+                  type: varchar(50)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: budget_amount
+                  type: decimal(15,2)
+              - column:
+                  name: start_at
+                  type: timestamp
+              - column:
+                  name: end_at
+                  type: timestamp
+              - column:
+                  name: configuration
+                  type: text
+              - column:
+                  name: validation_comment
+                  type: text
+              - column:
+                  name: moderation_comment
+                  type: text
+              - column:
+                  name: invoice_due_days
+                  type: int
+              - column:
+                  name: budget_formed
+                  type: boolean
+                  defaultValueBoolean: false
+                  constraints:
+                    nullable: false
+              - column:
+                  name: created_at
+                  type: timestamp
+                  constraints:
+                    nullable: false
+              - column:
+                  name: updated_at
+                  type: timestamp
+                  constraints:
+                    nullable: false
+              - column:
+                  name: notes
+                  type: text

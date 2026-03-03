@@ -1,0 +1,40 @@
+databaseChangeLog:
+  - changeSet:
+      id: 005-create-campaign-history-events
+      author: lab1-app
+      changes:
+        - createTable:
+            tableName: campaign_history_events
+            columns:
+              - column:
+                  name: id
+                  type: bigint
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: campaign_id
+                  type: bigint
+                  constraints:
+                    nullable: false
+              - column:
+                  name: type
+                  type: varchar(50)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: details
+                  type: text
+              - column:
+                  name: created_at
+                  type: timestamp
+                  constraints:
+                    nullable: false
+        - addForeignKeyConstraint:
+            baseTableName: campaign_history_events
+            baseColumnNames: campaign_id
+            referencedTableName: campaigns
+            referencedColumnNames: id
+            constraintName: fk_campaign_history_events_campaign
+            onDelete: CASCADE

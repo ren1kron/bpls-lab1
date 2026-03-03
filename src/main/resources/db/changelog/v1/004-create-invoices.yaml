@@ -1,0 +1,55 @@
+databaseChangeLog:
+  - changeSet:
+      id: 004-create-invoices
+      author: lab1-app
+      changes:
+        - createTable:
+            tableName: invoices
+            columns:
+              - column:
+                  name: id
+                  type: bigint
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: campaign_id
+                  type: bigint
+                  constraints:
+                    nullable: false
+              - column:
+                  name: revision
+                  type: int
+                  constraints:
+                    nullable: false
+              - column:
+                  name: status
+                  type: varchar(50)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: amount
+                  type: decimal(15,2)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: issued_at
+                  type: timestamp
+                  constraints:
+                    nullable: false
+              - column:
+                  name: due_at
+                  type: timestamp
+                  constraints:
+                    nullable: false
+              - column:
+                  name: paid_at
+                  type: timestamp
+        - addForeignKeyConstraint:
+            baseTableName: invoices
+            baseColumnNames: campaign_id
+            referencedTableName: campaigns
+            referencedColumnNames: id
+            constraintName: fk_invoices_campaign
+            onDelete: CASCADE

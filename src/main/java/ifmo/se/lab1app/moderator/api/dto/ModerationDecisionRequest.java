@@ -1,4 +1,4 @@
-package ifmo.se.lab1app.client.api.dto;
+package ifmo.se.lab1app.moderator.api.dto;
 
 import jakarta.validation.constraints.NotNull;
 

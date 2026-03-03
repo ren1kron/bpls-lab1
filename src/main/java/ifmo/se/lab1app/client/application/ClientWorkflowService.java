@@ -15,11 +15,6 @@ import java.util.*;
 @Service
 @Transactional
 public class ClientWorkflowService {
-    private static final Set<CampaignStatus> statuses = EnumSet.of(
-            CampaignStatus.WAITING_PAYMENT,
-            CampaignStatus.WAITING_START,
-            CampaignStatus.ACTIVE
-    );
 
     private final CampaignRepository campaignRepository;
 
@@ -92,7 +87,7 @@ public class ClientWorkflowService {
         return CampaignResponse.from(campaignRepository.save(campaign));
     }
 
-    // отправить на проверку
+    // 5. отправить на проверку
     public CampaignResponse submitForCheck(Long campaignId) {
         Campaign campaign = findCampaign(campaignId);
         requireStatus(campaign, CampaignStatus.CREATIVES_UPLOADED);

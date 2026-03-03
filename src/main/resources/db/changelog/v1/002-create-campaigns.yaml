@@ -65,12 +65,6 @@ databaseChangeLog:
                   name: invoice_due_days
                   type: int
               - column:
-                  name: budget_formed
-                  type: boolean
-                  defaultValueBoolean: false
-                  constraints:
-                    nullable: false
-              - column:
                   name: created_at
                   type: timestamp
                   constraints:

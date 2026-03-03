@@ -1,8 +1,8 @@
 package ifmo.se.lab1app.config;
 
-import ifmo.se.lab1app.campaign.model.User;
-import ifmo.se.lab1app.campaign.model.UserRole;
-import ifmo.se.lab1app.campaign.repository.UserRepository;
+import ifmo.se.lab1app.shared.domain.User;
+import ifmo.se.lab1app.shared.domain.UserRole;
+import ifmo.se.lab1app.auth.infra.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;

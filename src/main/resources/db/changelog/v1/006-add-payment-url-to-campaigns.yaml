@@ -1,0 +1,11 @@
+databaseChangeLog:
+  - changeSet:
+      id: 006-add-payment-url-to-campaigns
+      author: lab1-app
+      changes:
+        - addColumn:
+            tableName: campaigns
+            columns:
+              - column:
+                  name: payment_url
+                  type: text

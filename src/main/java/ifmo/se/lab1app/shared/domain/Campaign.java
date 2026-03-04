@@ -79,6 +79,9 @@ public class Campaign {
     @Column(columnDefinition = "text")
     private String moderationComment;
 
+    @Column(name = "payment_url", columnDefinition = "text")
+    private String paymentUrl;
+
     @Column
     private Integer invoiceDueDays;
 

@@ -1,8 +1,8 @@
 package ifmo.se.lab1app.moderator.application;
 
 import ifmo.se.lab1app.client.api.dto.CampaignResponse;
-import ifmo.se.lab1app.billing.yookassa.YooKassaPaymentClient;
-import ifmo.se.lab1app.billing.yookassa.YooKassaPaymentResult;
+import ifmo.se.lab1app.billing.yookassa.application.YooKassaPaymentClient;
+import ifmo.se.lab1app.billing.yookassa.application.YooKassaPaymentResult;
 import ifmo.se.lab1app.exception.InvalidStateException;
 import ifmo.se.lab1app.exception.NotFoundException;
 import ifmo.se.lab1app.moderator.api.dto.ModerationDecisionRequest;
@@ -40,10 +40,12 @@ public class ModeratorService {
             YooKassaPaymentResult payment = yooKassaPaymentClient.createPayment(campaign);
             paymentId = payment.id();
             paymentConfirmationUrl = payment.confirmationUrl();
+            campaign.setPaymentUrl(paymentConfirmationUrl);
             campaign.setStatus(CampaignStatus.WAITING_PAYMENT);
         } else {
             campaign.setStatus(CampaignStatus.MODERATION_REJECTED);
             campaign.setModerationComment(request.comment());
+            campaign.setPaymentUrl(null);
         }
 
         Campaign savedCampaign = campaignRepository.save(campaign);

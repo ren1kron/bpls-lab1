@@ -24,11 +24,11 @@ docker compose up -d postgres
 
 1. Собрать JAR локально:
 ```bash
-./gradlew bootJar
+./gradlew clean bootJar
 ```
 2. Поднять контейнеры:
 ```bash
-docker compose up --build -d
+docker compose up --build
 ```
 
 Важно: JAR собирается на хосте, в Docker он только копируется из `build/libs`.

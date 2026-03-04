@@ -4,7 +4,6 @@ import ifmo.se.lab1app.shared.domain.Campaign;
 import ifmo.se.lab1app.shared.domain.CampaignStatus;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.util.Comparator;
 import java.util.List;
 
 public record CampaignResponse(
@@ -18,6 +17,7 @@ public record CampaignResponse(
     List<CreativeResponse> creatives,
     String validationComment,
     String moderationComment,
+    String paymentUrl,
     Integer invoiceDueDays,
     LocalDateTime createdAt,
     LocalDateTime updatedAt,
@@ -45,6 +45,7 @@ public record CampaignResponse(
             creativeResponses,
             campaign.getValidationComment(),
             campaign.getModerationComment(),
+            campaign.getPaymentUrl(),
             campaign.getInvoiceDueDays(),
             campaign.getCreatedAt(),
             campaign.getUpdatedAt(),

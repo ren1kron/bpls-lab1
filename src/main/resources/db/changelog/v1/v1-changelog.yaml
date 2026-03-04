@@ -9,3 +9,5 @@ databaseChangeLog:
       file: db/changelog/v1/004-create-invoices.yaml
   - include:
       file: db/changelog/v1/005-create-campaign-history-events.yaml
+  - include:
+      file: db/changelog/v1/006-add-payment-url-to-campaigns.yaml

@@ -1,4 +1,4 @@
-package ifmo.se.lab1app.billing.yookassa;
+package ifmo.se.lab1app.billing.yookassa.application;
 
 import lombok.Getter;
 import lombok.Setter;

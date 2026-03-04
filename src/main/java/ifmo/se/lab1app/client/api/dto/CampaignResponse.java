@@ -20,10 +20,16 @@ public record CampaignResponse(
     String moderationComment,
     Integer invoiceDueDays,
     LocalDateTime createdAt,
-    LocalDateTime updatedAt
+    LocalDateTime updatedAt,
+    String paymentId,
+    String paymentConfirmationUrl
 ) {
 
     public static CampaignResponse from(Campaign campaign) {
+        return from(campaign, null, null);
+    }
+
+    public static CampaignResponse from(Campaign campaign, String paymentId, String paymentConfirmationUrl) {
         List<CreativeResponse> creativeResponses = campaign.getCreatives().stream()
             .map(CreativeResponse::from)
             .toList();
@@ -41,7 +47,9 @@ public record CampaignResponse(
             campaign.getModerationComment(),
             campaign.getInvoiceDueDays(),
             campaign.getCreatedAt(),
-            campaign.getUpdatedAt()
+            campaign.getUpdatedAt(),
+            paymentId,
+            paymentConfirmationUrl
         );
     }
 }

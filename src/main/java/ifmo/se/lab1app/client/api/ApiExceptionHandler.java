@@ -1,6 +1,7 @@
 package ifmo.se.lab1app.client.api;
 
 import ifmo.se.lab1app.client.api.dto.ApiErrorResponse;
+import ifmo.se.lab1app.exception.ExternalServiceException;
 import ifmo.se.lab1app.exception.InvalidStateException;
 import ifmo.se.lab1app.exception.NotFoundException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -23,6 +24,14 @@ public class ApiExceptionHandler {
     @ExceptionHandler(InvalidStateException.class)
     public ResponseEntity<ApiErrorResponse> handleInvalidState(InvalidStateException exception, HttpServletRequest request) {
         return build(HttpStatus.CONFLICT, exception.getMessage(), request.getRequestURI());
+    }
+
+    @ExceptionHandler(ExternalServiceException.class)
+    public ResponseEntity<ApiErrorResponse> handleExternalService(
+        ExternalServiceException exception,
+        HttpServletRequest request
+    ) {
+        return build(HttpStatus.BAD_GATEWAY, exception.getMessage(), request.getRequestURI());
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)

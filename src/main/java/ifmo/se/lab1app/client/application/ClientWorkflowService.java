@@ -98,9 +98,23 @@ public class ClientWorkflowService {
     }
 
     // Доработать по замечаниям модератора
-    public CampaignResponse fixModerationIssues(Long campaignId) {
+    public CampaignResponse fixModerationIssues(Long campaignId, UploadCreativesRequest request) {
         Campaign campaign = findCampaign(campaignId);
         requireStatus(campaign, CampaignStatus.MODERATION_REJECTED);
+
+        if (request.creatives() != null) {
+            campaign.getCreatives().clear();
+            List<Creative> creatives = request.creatives().stream()
+                    .map(creativeRequest -> {
+                        Creative creative = new Creative();
+                        creative.setName(creativeRequest.name());
+                        creative.setType(creativeRequest.type());
+                        creative.setCampaign(campaign);
+                        return creative;
+                    })
+                    .toList();
+            campaign.getCreatives().addAll(creatives);
+        }
 
         campaign.setStatus(CampaignStatus.CREATIVES_UPLOADED);
 

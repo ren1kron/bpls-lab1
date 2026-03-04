@@ -1,6 +1,8 @@
 package ifmo.se.lab1app.moderator.application;
 
 import ifmo.se.lab1app.client.api.dto.CampaignResponse;
+import ifmo.se.lab1app.billing.yookassa.YooKassaPaymentClient;
+import ifmo.se.lab1app.billing.yookassa.YooKassaPaymentResult;
 import ifmo.se.lab1app.exception.InvalidStateException;
 import ifmo.se.lab1app.exception.NotFoundException;
 import ifmo.se.lab1app.moderator.api.dto.ModerationDecisionRequest;
@@ -19,9 +21,11 @@ import java.util.Arrays;
 public class ModeratorService {
 
     private final CampaignRepository campaignRepository;
+    private final YooKassaPaymentClient yooKassaPaymentClient;
 
-    public ModeratorService(CampaignRepository campaignRepository) {
+    public ModeratorService(CampaignRepository campaignRepository, YooKassaPaymentClient yooKassaPaymentClient) {
         this.campaignRepository = campaignRepository;
+        this.yooKassaPaymentClient = yooKassaPaymentClient;
     }
 
     public CampaignResponse processModerationDecision(Long campaignId, ModerationDecisionRequest request) {
@@ -29,14 +33,21 @@ public class ModeratorService {
         requireStatus(campaign, CampaignStatus.ON_MODERATION);
 
         campaign.setModerationComment(request.comment());
+        String paymentId = null;
+        String paymentConfirmationUrl = null;
 
         if (Boolean.TRUE.equals(request.approved())) {
-            // i need to send this curl here
+            YooKassaPaymentResult payment = yooKassaPaymentClient.createPayment(campaign);
+            paymentId = payment.id();
+            paymentConfirmationUrl = payment.confirmationUrl();
+            campaign.setStatus(CampaignStatus.WAITING_PAYMENT);
         } else {
             campaign.setStatus(CampaignStatus.MODERATION_REJECTED);
+            campaign.setModerationComment(request.comment());
         }
 
-        return CampaignResponse.from(campaignRepository.save(campaign));
+        Campaign savedCampaign = campaignRepository.save(campaign);
+        return CampaignResponse.from(savedCampaign, paymentId, paymentConfirmationUrl);
     }
 
     private Campaign findCampaign(Long campaignId) {

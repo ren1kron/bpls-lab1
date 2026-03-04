@@ -63,6 +63,24 @@ public class ClientController {
         return clientService.uploadCreatives(campaignId, request);
     }
 
+    @PostMapping("/{campaignId}/submit")
+    @Operation(summary = "Отправить на модерацию")
+    public CampaignResponse submitForCheck(
+            @Parameter(description = "Идентификатор экземпляра процесса (campaignId)")
+            @PathVariable Long campaignId
+    ) {
+        return clientService.submitForCheck(campaignId);
+    }
+
+    @PostMapping("/{campaignId}/fix")
+    @Operation(summary = "Поправить по замечаниям модерации")
+    public CampaignResponse fixModerationIssues(
+            @Parameter(description = "Идентификатор экземпляра процесса (campaignId)")
+            @PathVariable Long campaignId,
+            @Valid @RequestBody UploadCreativesRequest request
+    ) {
+        return clientService.fixModerationIssues(campaignId, request);
+    }
 
 
 }

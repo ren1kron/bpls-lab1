@@ -82,6 +82,9 @@ public class Campaign {
     @Column(name = "payment_url", columnDefinition = "text")
     private String paymentUrl;
 
+    @Column(name = "payment_id", columnDefinition = "text")
+    private String paymentId;
+
     @Column
     private Integer invoiceDueDays;
 

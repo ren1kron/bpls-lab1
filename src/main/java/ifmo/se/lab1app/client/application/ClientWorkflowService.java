@@ -7,6 +7,7 @@ import ifmo.se.lab1app.exception.InvalidStateException;
 import ifmo.se.lab1app.exception.NotFoundException;
 import ifmo.se.lab1app.shared.domain.Campaign;
 import ifmo.se.lab1app.shared.domain.CampaignStatus;
+import jakarta.validation.Valid;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -117,6 +118,29 @@ public class ClientWorkflowService {
         }
 
         campaign.setStatus(CampaignStatus.CREATIVES_UPLOADED);
+
+        return CampaignResponse.from(campaignRepository.save(campaign));
+    }
+
+    public CampaignResponse freezeCampaign(Long campaignId) {
+        Campaign campaign = findCampaign(campaignId);
+        requireStatus(campaign, CampaignStatus.ACTIVE);
+
+        campaign.setStatus(CampaignStatus.FROZEN_NO_PAYMENT);
+
+        return CampaignResponse.from(campaignRepository.save(campaign));
+    }
+
+
+    public CampaignResponse restartCampaign(Long campaignId, @Valid ProceedCampaignRequest request) {
+        Campaign campaign = findCampaign(campaignId);
+        requireStatus(campaign, CampaignStatus.FROZEN_NO_PAYMENT);
+
+        if (request.proceed()) {
+            campaign.setStatus(CampaignStatus.ACTIVE);
+        } else {
+            campaign.setStatus(CampaignStatus.STOPPED);
+        }
 
         return CampaignResponse.from(campaignRepository.save(campaign));
     }

@@ -1,8 +1,8 @@
 package ifmo.se.lab1app.billing.yookassa.application;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import ifmo.se.lab1app.billing.yookassa.dto.PaymentObject;
 import ifmo.se.lab1app.billing.yookassa.dto.YooKassaNotification;
+import ifmo.se.lab1app.system.application.SystemService;
+import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
@@ -18,24 +18,25 @@ public class YooKassaWebhook {
 
     private static final Logger log = LoggerFactory.getLogger(YooKassaWebhook.class);
 
+    private final SystemService service;
+
+    public YooKassaWebhook(SystemService service) {
+        this.service = service;
+    }
+
     @PostMapping
-    public ResponseEntity<Void> handleWebhook(@RequestBody JsonNode requestBody) {
+    public ResponseEntity<Void> handleWebhook(@RequestBody Map<String, Object> requestBody) {
         try {
             YooKassaNotification notification = YooKassaNotification.fromJson(requestBody);
-
-            PaymentObject payment = notification.object();
-            log.info("Received event={} paymentId={} status={} paid={}",
-                    notification.event(),
-                    payment.id(),
-                    payment.status(),
-                    payment.paid());
-
-            switch (notification.event()) {
-                case "payment.succeeded" -> log.info("Handle successful payment {}", payment.id());
-                case "payment.canceled" -> log.info("Handle canceled payment {}", payment.id());
-                default -> log.warn("Unsupported event: {}", notification.event());
-            }
-
+            var payment = notification.object();
+            log.info(
+                "Received YooKassa webhook event={} paymentId={} status={} paid={}",
+                notification.event(),
+                payment.id(),
+                payment.status(),
+                payment.paid()
+            );
+            service.processPayment(notification);
             return ResponseEntity.ok().build();
         } catch (Exception ex) {
             log.error("Invalid webhook payload", ex);

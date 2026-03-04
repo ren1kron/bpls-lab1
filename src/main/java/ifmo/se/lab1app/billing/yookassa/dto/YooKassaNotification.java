@@ -1,28 +1,41 @@
 package ifmo.se.lab1app.billing.yookassa.dto;
 
-import com.fasterxml.jackson.databind.JsonNode;
+import java.util.Map;
 
 public record YooKassaNotification(String event, PaymentObject object) {
 
-    public static YooKassaNotification fromJson(JsonNode root) {
-        if (root == null || root.isNull()) {
+    public static YooKassaNotification fromJson(Map<String, Object> root) {
+        if (root == null || root.isEmpty()) {
             throw new IllegalArgumentException("Request body is empty");
         }
 
-        JsonNode eventNode = root.get("event");
-        JsonNode objectNode = root.get("object");
+        Object eventValue = root.get("event");
+        Object objectValue = root.get("object");
 
-        if (eventNode == null || eventNode.isNull() || objectNode == null || objectNode.isNull()) {
+        if (!(eventValue instanceof String event) || !(objectValue instanceof Map<?, ?> rawObjectMap)) {
             throw new IllegalArgumentException("Required fields 'event' and 'object' are missing");
         }
 
-        String event = eventNode.asText();
+        Map<String, Object> objectNode = rawObjectMap.entrySet().stream()
+            .filter(entry -> entry.getKey() instanceof String)
+            .collect(java.util.stream.Collectors.toMap(
+                entry -> (String) entry.getKey(),
+                Map.Entry::getValue
+            ));
 
-        String id = objectNode.path("id").asText(null);
-        String status = objectNode.path("status").asText(null);
-        Boolean paid = objectNode.has("paid") ? objectNode.path("paid").asBoolean() : null;
+        String id = readString(objectNode.get("id"));
+        String status = readString(objectNode.get("status"));
+        Boolean paid = readBoolean(objectNode.get("paid"));
 
         PaymentObject paymentObject = new PaymentObject(id, status, paid, objectNode);
         return new YooKassaNotification(event, paymentObject);
+    }
+
+    private static String readString(Object value) {
+        return value instanceof String stringValue ? stringValue : null;
+    }
+
+    private static Boolean readBoolean(Object value) {
+        return value instanceof Boolean booleanValue ? booleanValue : null;
     }
 }

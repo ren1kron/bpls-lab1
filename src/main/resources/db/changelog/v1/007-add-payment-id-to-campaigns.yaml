@@ -1,0 +1,11 @@
+databaseChangeLog:
+  - changeSet:
+      id: 007-add-payment-id-to-campaigns
+      author: lab1-app
+      changes:
+        - addColumn:
+            tableName: campaigns
+            columns:
+              - column:
+                  name: payment_id
+                  type: text

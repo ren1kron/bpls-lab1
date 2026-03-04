@@ -1,10 +1,7 @@
 package ifmo.se.lab1app.client.api;
 
+import ifmo.se.lab1app.client.api.dto.*;
 import ifmo.se.lab1app.client.application.ClientWorkflowService;
-import ifmo.se.lab1app.client.api.dto.CampaignResponse;
-import ifmo.se.lab1app.client.api.dto.ConfigureCampaignRequest;
-import ifmo.se.lab1app.client.api.dto.DraftCampaignRequest;
-import ifmo.se.lab1app.client.api.dto.UploadCreativesRequest;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -83,4 +80,22 @@ public class ClientController {
     }
 
 
+    @PostMapping("/{campaignId}/stop")
+    @Operation(summary = "Запросить паузу")
+    public CampaignResponse freezeCampaign(
+            @Parameter(description = "Идентификатор экземпляра процесса (campaignId)")
+            @PathVariable Long campaignId
+    ) {
+        return clientService.freezeCampaign(campaignId);
+    }
+
+    @PostMapping("/{campaignId}/proceed")
+    @Operation(summary = "Решить: запустить или завершить")
+    public CampaignResponse proceedCampaign(
+            @Parameter(description = "Идентификатор экземпляра процесса (campaignId)")
+            @PathVariable Long campaignId,
+            @Valid @RequestBody ProceedCampaignRequest request
+            ) {
+        return clientService.restartCampaign(campaignId, request);
+    }
 }

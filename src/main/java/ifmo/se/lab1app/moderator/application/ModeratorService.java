@@ -33,23 +33,21 @@ public class ModeratorService {
         requireStatus(campaign, CampaignStatus.ON_MODERATION);
 
         campaign.setModerationComment(request.comment());
-        String paymentId = null;
-        String paymentConfirmationUrl = null;
 
         if (Boolean.TRUE.equals(request.approved())) {
             YooKassaPaymentResult payment = yooKassaPaymentClient.createPayment(campaign);
-            paymentId = payment.id();
-            paymentConfirmationUrl = payment.confirmationUrl();
-            campaign.setPaymentUrl(paymentConfirmationUrl);
+            campaign.setPaymentId(payment.id());
+            campaign.setPaymentUrl(payment.confirmationUrl());
             campaign.setStatus(CampaignStatus.WAITING_PAYMENT);
         } else {
             campaign.setStatus(CampaignStatus.MODERATION_REJECTED);
             campaign.setModerationComment(request.comment());
+            campaign.setPaymentId(null);
             campaign.setPaymentUrl(null);
         }
 
         Campaign savedCampaign = campaignRepository.save(campaign);
-        return CampaignResponse.from(savedCampaign, paymentId, paymentConfirmationUrl);
+        return CampaignResponse.from(savedCampaign);
     }
 
     private Campaign findCampaign(Long campaignId) {

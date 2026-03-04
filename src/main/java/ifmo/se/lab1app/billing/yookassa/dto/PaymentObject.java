@@ -1,5 +1,5 @@
 package ifmo.se.lab1app.billing.yookassa.dto;
 
-import com.fasterxml.jackson.databind.JsonNode;
+import java.util.Map;
 
-public record PaymentObject(String id, String status, Boolean paid, JsonNode rawPayload) {}
+public record PaymentObject(String id, String status, Boolean paid, Map<String, Object> rawPayload) {}

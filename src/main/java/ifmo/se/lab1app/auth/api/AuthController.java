@@ -19,7 +19,7 @@ import org.springframework.web.bind.annotation.RestController;
 import java.security.Principal;
 
 @RestController
-@RequestMapping("/api/auth")
+@RequestMapping("/auth")
 @RequiredArgsConstructor
 @Tag(
         name = "Auth",

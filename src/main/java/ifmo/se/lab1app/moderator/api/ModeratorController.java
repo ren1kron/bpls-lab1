@@ -12,7 +12,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/api/moderator")
+@RequestMapping("/advertisement/moderator")
 @PreAuthorize("hasRole('COMPANY_MODERATOR')")
 @RequiredArgsConstructor
 @Tag(

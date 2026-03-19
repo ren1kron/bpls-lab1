@@ -40,7 +40,7 @@ public class SystemService {
                 campaign.setStatus(CampaignStatus.WAITING_START);
             }
             case "payment.canceled" -> {
-                campaign.setStatus(CampaignStatus.FROZEN_NO_PAYMENT);
+                campaign.setStatus(CampaignStatus.FROZEN);
             }
             default -> {
                 log.warn("Unsupported event: {}", notification.event());
@@ -58,11 +58,13 @@ public class SystemService {
     }
 
     private void processTimers(Campaign campaign, LocalDateTime now) {
-        if (campaign.getStatus() == CampaignStatus.WAITING_START && !campaign.getStartAt().isAfter(now)) {
+        if (campaign.getStatus() == CampaignStatus.WAITING_START && !campaign.getRequestedStartAt().isAfter(now)) {
+            campaign.setActualStartAt(now);
+            campaign.setActualEndAt(now.plusDays(campaign.getDurationDays()));
             campaign.setStatus(CampaignStatus.ACTIVE);
         }
 
-        if (campaign.getStatus() == CampaignStatus.ACTIVE && !campaign.getEndAt().isAfter(now)) {
+        if (campaign.getStatus() == CampaignStatus.ACTIVE && !campaign.getActualEndAt().isAfter(now)) {
             campaign.setStatus(CampaignStatus.STOPPED);
         }
     }

@@ -39,63 +39,60 @@ public class Campaign {
     private String name;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
+    @Column(nullable = false, length = 50)
     private CampaignObjective objective;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
+    @Column(nullable = false, length = 50)
     private CampaignType type;
 
-    @Column(nullable = false)
+    @Column(nullable = false, length = 2048)
     private String url;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
+    @Column(nullable = false, length = 50)
     private StartMode startMode;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
+    @Column(nullable = false, length = 50)
     private CampaignStatus status;
 
     @Column(precision = 15, scale = 2)
     private BigDecimal budgetAmount;
 
     @Column
-    private LocalDateTime startAt;
+    private LocalDateTime requestedStartAt;
 
     @Column
-    private LocalDateTime endAt;
+    private Integer durationDays;
 
-    @Column(columnDefinition = "text")
-    private String configuration;
+    @Column
+    private LocalDateTime actualStartAt;
+
+    @Column
+    private LocalDateTime actualEndAt;
+
+    @Column
+    private LocalDateTime frozenAt;
 
     @OneToMany(mappedBy = "campaign", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     @OrderBy("id DESC")
     private List<Creative> creatives = new ArrayList<>();
 
     @Column(columnDefinition = "text")
-    private String validationComment;
-
-    @Column(columnDefinition = "text")
     private String moderationComment;
 
-    @Column(name = "payment_url", columnDefinition = "text")
-    private String paymentUrl;
+    @Column(name = "payment_confirmation_url", columnDefinition = "text")
+    private String paymentConfirmationUrl;
 
     @Column(name = "payment_id", columnDefinition = "text")
     private String paymentId;
-
-    @Column
-    private Integer invoiceDueDays;
 
     @Column(nullable = false)
     private LocalDateTime createdAt;
 
     @Column(nullable = false)
     private LocalDateTime updatedAt;
-
-    @Column
-    private String notes;
 
     @PrePersist
     public void onCreate() {

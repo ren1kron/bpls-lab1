@@ -47,23 +47,29 @@ databaseChangeLog:
                   name: budget_amount
                   type: decimal(15,2)
               - column:
-                  name: start_at
+                  name: requested_start_at
                   type: timestamp
               - column:
-                  name: end_at
+                  name: duration_days
+                  type: int
+              - column:
+                  name: actual_start_at
                   type: timestamp
               - column:
-                  name: configuration
-                  type: text
+                  name: actual_end_at
+                  type: timestamp
               - column:
-                  name: validation_comment
-                  type: text
+                  name: frozen_at
+                  type: timestamp
               - column:
                   name: moderation_comment
                   type: text
               - column:
-                  name: invoice_due_days
-                  type: int
+                  name: payment_confirmation_url
+                  type: text
+              - column:
+                  name: payment_id
+                  type: text
               - column:
                   name: created_at
                   type: timestamp
@@ -74,6 +80,4 @@ databaseChangeLog:
                   type: timestamp
                   constraints:
                     nullable: false
-              - column:
-                  name: notes
-                  type: text
+        

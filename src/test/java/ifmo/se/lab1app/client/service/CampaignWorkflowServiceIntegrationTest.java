@@ -12,9 +12,6 @@ import org.springframework.boot.test.context.SpringBootTest;
 class CampaignWorkflowServiceIntegrationTest {
 
     @Autowired
-    private CampaignWorkflowService campaignWorkflowService;
-
-    @Autowired
     private CampaignRepository campaignRepository;
 
     @BeforeEach

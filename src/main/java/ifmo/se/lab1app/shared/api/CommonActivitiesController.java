@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api")
+@RequestMapping("/advertisement")
 @RequiredArgsConstructor
 @Tag(
         name = "Campaigns state control",

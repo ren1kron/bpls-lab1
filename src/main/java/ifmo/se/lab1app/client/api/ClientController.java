@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.*;
 
 @PreAuthorize("hasRole('CLIENT')")
 @RestController
-@RequestMapping("/api/client")
+@RequestMapping("/advertisement/client")
 @RequiredArgsConstructor
 @Tag(
         name = "Client workflow",
@@ -27,17 +27,17 @@ public class ClientController {
     @ResponseStatus(HttpStatus.CREATED)
     @Operation(summary = "Создать черновик кампании")
     public CampaignResponse createCampaignDraft(@Valid @RequestBody DraftCampaignRequest request) {
-        return clientService.createCampaignDraft(request);
+        return clientService.createDraft(request);
     }
 
-    @PutMapping("/{campaignId}")
+    @PatchMapping("/{campaignId}")
     @Operation(summary = "Обновить черновик кампании")
-    public CampaignResponse updateCampaignDraft(
+    public CampaignResponse patchCampaignDraft(
             @Parameter(description = "Идентификатор экземпляра процесса (campaignId)")
             @PathVariable Long campaignId,
-            @Valid @RequestBody DraftCampaignRequest request
+            @Valid @RequestBody UpdateDraftCampaignRequest request
     ) {
-        return clientService.updateCampaignDraft(campaignId, request);
+        return clientService.patchCampaignBasics(campaignId, request);
     }
 
     @PostMapping("/{campaignId}/configure")
@@ -50,14 +50,33 @@ public class ClientController {
         return clientService.configureCampaign(campaignId, request);
     }
 
-    @PostMapping("/{campaignId}/creatives")
-    @Operation(summary = "Загрузить креативы")
-    public CampaignResponse uploadCreatives(
+    @PatchMapping("/{campaignId}/configure")
+    @Operation(summary = "Перенастроить кампанию (плейсменты/таргетинг/расписание/бюджет)")
+    public CampaignResponse reconfigureCampaign(
             @Parameter(description = "Идентификатор экземпляра процесса (campaignId)")
             @PathVariable Long campaignId,
-            @Valid @RequestBody UploadCreativesRequest request
+            @Valid @RequestBody ReconfigureCampaignRequest request
     ) {
-        return clientService.uploadCreatives(campaignId, request);
+        return clientService.reconfigureCampaign(campaignId, request);
+    }
+
+    @PostMapping("/{campaignId}/creatives")
+    @Operation(summary = "Добавить кампании один креатив")
+    public CampaignResponse uploadCreative(
+            @Parameter(description = "Идентификатор экземпляра процесса (campaignId)")
+            @PathVariable Long campaignId,
+            @Valid @RequestBody CreativeRequest request
+    ) {
+        return clientService.addCreative(campaignId, request);
+    }
+
+    @DeleteMapping("/{campaignId}/creatives/{creativeId}")
+    @Operation(summary = "Удалить один креатив у кампании")
+    public CampaignResponse deleteCreative(
+            @PathVariable Long campaignId,
+            @PathVariable Long creativeId
+    ) {
+        return clientService.deleteCreative(campaignId, creativeId);
     }
 
     @PostMapping("/{campaignId}/submit")
@@ -69,16 +88,15 @@ public class ClientController {
         return clientService.submitForCheck(campaignId);
     }
 
-    @PostMapping("/{campaignId}/fix")
-    @Operation(summary = "Поправить по замечаниям модерации")
-    public CampaignResponse fixModerationIssues(
+    @DeleteMapping("/{campaignId}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    @Operation(summary = "Удалить кампанию (можно удалить только не запущенную кампанию)")
+    public void deleteCampaign(
             @Parameter(description = "Идентификатор экземпляра процесса (campaignId)")
-            @PathVariable Long campaignId,
-            @Valid @RequestBody UploadCreativesRequest request
+            @PathVariable Long campaignId
     ) {
-        return clientService.fixModerationIssues(campaignId, request);
+        clientService.deleteCampaign(campaignId);
     }
-
 
     @PostMapping("/{campaignId}/stop")
     @Operation(summary = "Запросить паузу")

@@ -37,13 +37,12 @@ public class ModeratorService {
         if (Boolean.TRUE.equals(request.approved())) {
             YooKassaPaymentResult payment = yooKassaPaymentClient.createPayment(campaign);
             campaign.setPaymentId(payment.id());
-            campaign.setPaymentUrl(payment.confirmationUrl());
+            campaign.setPaymentConfirmationUrl(payment.confirmationUrl());
             campaign.setStatus(CampaignStatus.WAITING_PAYMENT);
         } else {
             campaign.setStatus(CampaignStatus.MODERATION_REJECTED);
-            campaign.setModerationComment(request.comment());
             campaign.setPaymentId(null);
-            campaign.setPaymentUrl(null);
+            campaign.setPaymentConfirmationUrl(null);
         }
 
         Campaign savedCampaign = campaignRepository.save(campaign);
@@ -52,14 +51,14 @@ public class ModeratorService {
 
     private Campaign findCampaign(Long campaignId) {
         return campaignRepository.findById(campaignId)
-                .orElseThrow(() -> new NotFoundException("Кампания с id=" + campaignId + " не найдена"));
+                .orElseThrow(() -> new NotFoundException("Campaign with id=" + campaignId + " was never found"));
     }
 
     private void requireStatus(Campaign campaign, CampaignStatus... allowedStatuses) {
         if (Arrays.stream(allowedStatuses).noneMatch(status -> status == campaign.getStatus())) {
             throw new InvalidStateException(
-                    "Некорректный переход из статуса " + campaign.getStatus() +
-                            ". Ожидались: " + Arrays.toString(allowedStatuses)
+                    "Incorrect move from status " + campaign.getStatus() +
+                            ". Allowed: " + Arrays.toString(allowedStatuses)
             );
         }
     }

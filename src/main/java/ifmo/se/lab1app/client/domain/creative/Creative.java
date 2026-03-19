@@ -18,7 +18,7 @@ public class Creative {
     private String name;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
+    @Column(nullable = false, length = 50)
     private CreativeType type;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)

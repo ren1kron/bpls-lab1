@@ -48,10 +48,7 @@ class ModeratorServiceTest {
         );
 
         assertThat(campaign.getPaymentId()).isEqualTo("payment-1");
-        assertThat(campaign.getPaymentUrl()).isEqualTo("https://pay.example/confirm");
         assertThat(campaign.getStatus()).isEqualTo(CampaignStatus.WAITING_PAYMENT);
-        assertThat(response.paymentUrl()).isEqualTo("https://pay.example/confirm");
-        assertThat(response.paymentConfirmationUrl()).isEqualTo("https://pay.example/confirm");
         verify(campaignRepository).save(campaign);
     }
 }

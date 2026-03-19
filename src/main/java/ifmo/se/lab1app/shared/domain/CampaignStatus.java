@@ -10,6 +10,6 @@ public enum CampaignStatus {
     WAITING_START,
     ACTIVE,
     PAUSED,
-    FROZEN_NO_PAYMENT,
+    FROZEN,
     STOPPED
 }

@@ -1,6 +1,7 @@
 package ifmo.se.lab1app.client.api;
 
 import ifmo.se.lab1app.client.api.dto.ApiErrorResponse;
+import ifmo.se.lab1app.exception.CreativeLimitExceededException;
 import ifmo.se.lab1app.exception.ExternalServiceException;
 import ifmo.se.lab1app.exception.InvalidStateException;
 import ifmo.se.lab1app.exception.NotFoundException;
@@ -15,6 +16,11 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 @RestControllerAdvice
 public class ApiExceptionHandler {
+
+    @ExceptionHandler(CreativeLimitExceededException.class)
+    public ResponseEntity<ApiErrorResponse> handleCreativeLimitExceeded(NotFoundException exception, HttpServletRequest request) {
+        return build(HttpStatus.CONFLICT, exception.getMessage(), request.getRequestURI());
+    }
 
     @ExceptionHandler(NotFoundException.class)
     public ResponseEntity<ApiErrorResponse> handleNotFound(NotFoundException exception, HttpServletRequest request) {

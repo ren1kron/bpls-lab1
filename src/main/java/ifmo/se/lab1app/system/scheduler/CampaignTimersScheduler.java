@@ -15,7 +15,7 @@ public class CampaignTimersScheduler {
         this.service = service;
     }
 
-    @Scheduled(fixedDelayString = "${app.timers.fixed-delay-ms:30000}")
+//    @Scheduled(fixedDelayString = "${app.timers.fixed-delay-ms:30000}")
     public void processTimers() {
         log.info("Scheduler on campaigns processes...");
         service.processTimersForAllCampaigns();

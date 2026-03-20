@@ -107,7 +107,7 @@ public class ClientWorkflowService {
 
         Creative creative = new Creative();
         creative.setCampaign(campaign);
-        creative.setName(request.name());
+        creative.setName(request.url());
         creative.setType(request.type());
 
 

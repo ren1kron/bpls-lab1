@@ -13,5 +13,5 @@ public record DraftCampaignRequest(
     @NotNull CampaignObjective objective,
     @NotNull CampaignType campaignType,
     @NotNull StartMode startMode,
-    @NotBlank @URL(protocol = "https") String url
+    @NotBlank @URL(protocol = "https", regexp = "^(https://).+\\..+") String url
 ) {}

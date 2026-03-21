@@ -8,5 +8,5 @@ import java.time.LocalDateTime;
 public record ConfigureCampaignRequest(
         @NotNull @Positive @Digits(integer = 13, fraction = 2) BigDecimal budgetAmount,
         @NotNull @Future LocalDateTime requestedStartAt,
-        @NotNull @Positive Integer durationDays
+        @NotNull @Positive @Size(max = 365) Integer durationDays
 ) {}

@@ -25,6 +25,8 @@ repositories {
 }
 
 dependencies {
+    implementation("com.atomikos:transactions-jdbc:6.0.0:jakarta")
+    implementation("com.atomikos:transactions-jta:6.0.0:jakarta")
     implementation("org.springframework.boot:spring-boot-starter-data-jpa")
     implementation("org.springframework.boot:spring-boot-starter-security")
     implementation("org.springframework.boot:spring-boot-starter-validation")

@@ -7,12 +7,15 @@ import static org.mockito.Mockito.when;
 
 import ifmo.se.lab1app.billing.yookassa.application.YooKassaPaymentClient;
 import ifmo.se.lab1app.billing.yookassa.application.YooKassaPaymentResult;
+import ifmo.se.lab1app.client.api.dto.CampaignResponse;
 import ifmo.se.lab1app.moderator.api.dto.ModerationDecisionRequest;
+import ifmo.se.lab1app.shared.application.TransactionExecutor;
 import ifmo.se.lab1app.shared.domain.Campaign;
 import ifmo.se.lab1app.shared.domain.CampaignStatus;
 import ifmo.se.lab1app.shared.infra.CampaignRepository;
 import java.util.Optional;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -27,8 +30,17 @@ class ModeratorServiceTest {
     @Mock
     private YooKassaPaymentClient yooKassaPaymentClient;
 
+    @Mock
+    private TransactionExecutor transactionExecutor;
+
     @InjectMocks
     private ModeratorService moderatorService;
+
+    @BeforeEach
+    void setUpTransactions() {
+        when(transactionExecutor.write(org.mockito.ArgumentMatchers.<java.util.function.Supplier<CampaignResponse>>any()))
+                .thenAnswer(invocation -> invocation.<java.util.function.Supplier<CampaignResponse>>getArgument(0).get());
+    }
 
     @Test
     void shouldPersistPaymentUrlWhenModerationApproved() {

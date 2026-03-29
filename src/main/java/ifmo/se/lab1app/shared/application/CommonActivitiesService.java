@@ -5,27 +5,27 @@ import ifmo.se.lab1app.exception.NotFoundException;
 import ifmo.se.lab1app.shared.domain.Campaign;
 import ifmo.se.lab1app.shared.infra.CampaignRepository;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
 @Service
-@Transactional(readOnly = true)
 public class CommonActivitiesService {
     private final CampaignRepository campaignRepository;
+    private final TransactionExecutor transactions;
 
-    public CommonActivitiesService(CampaignRepository campaignRepo) {
+    public CommonActivitiesService(CampaignRepository campaignRepo, TransactionExecutor transactions) {
         this.campaignRepository = campaignRepo;
+        this.transactions = transactions;
     }
 
     public List<CampaignResponse> getCampaigns() {
-        return campaignRepository.findAll().stream()
+        return transactions.read(() -> campaignRepository.findAll().stream()
                 .map(CampaignResponse::from)
-                .toList();
+                .toList());
     }
 
     public CampaignResponse getCampaign(Long campaignId) {
-        return CampaignResponse.from(findCampaign(campaignId));
+        return transactions.read(() -> CampaignResponse.from(findCampaign(campaignId)));
     }
 
     private Campaign findCampaign(Long campaignId) {

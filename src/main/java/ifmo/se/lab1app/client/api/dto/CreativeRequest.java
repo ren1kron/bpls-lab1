@@ -6,7 +6,7 @@ import jakarta.validation.constraints.NotNull;
 import org.hibernate.validator.constraints.URL;
 
 public record CreativeRequest(
-    @NotBlank @URL String name,
+    @NotBlank @URL(protocol = "https", regexp = "^(https://).+\\..+") String url,
     @NotNull CreativeType type
 ) {
 }

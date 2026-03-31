@@ -1,9 +1,10 @@
 package ifmo.se.lab1app.auth.api.dto;
 
 import ifmo.se.lab1app.shared.domain.UserRole;
+import java.util.Set;
 
 public record UserResponse(
-        Long id,
         String username,
-        UserRole role
+        UserRole role,
+        Set<String> privileges
 ) {}

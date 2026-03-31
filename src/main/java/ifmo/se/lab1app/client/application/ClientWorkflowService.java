@@ -10,6 +10,7 @@ import ifmo.se.lab1app.exception.NotFoundException;
 import ifmo.se.lab1app.shared.domain.Campaign;
 import ifmo.se.lab1app.shared.domain.CampaignStatus;
 import jakarta.validation.Valid;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
@@ -27,6 +28,7 @@ public class ClientWorkflowService {
     }
 
     // 1. создать черновик кампании
+    @PreAuthorize("hasAuthority('campaign:create')")
     public CampaignResponse createDraft(DraftCampaignRequest request) {
         return transactions.write(() -> {
             Campaign campaign = new Campaign();
@@ -42,6 +44,7 @@ public class ClientWorkflowService {
     }
 
     // 1.1 обновить черновик кампании
+    @PreAuthorize("hasAuthority('campaign:edit')")
     public CampaignResponse patchCampaignBasics(Long campaignId, UpdateDraftCampaignRequest request) {
         return transactions.write(() -> {
             Campaign campaign = findCampaign(campaignId);
@@ -68,6 +71,7 @@ public class ClientWorkflowService {
     }
 
     // 2. настроить кампанию (плейсменты/таргетинг/расписание/бюджет)
+    @PreAuthorize("hasAuthority('campaign:configure')")
     public CampaignResponse configureCampaign(Long campaignId, ConfigureCampaignRequest request) {
         return transactions.write(() -> {
             Campaign campaign = findCampaign(campaignId);
@@ -84,6 +88,7 @@ public class ClientWorkflowService {
     }
 
     // 2.1. reconfigure campaign
+    @PreAuthorize("hasAuthority('campaign:configure')")
     public CampaignResponse reconfigureCampaign(Long campaignId, ReconfigureCampaignRequest request) {
         return transactions.write(() -> {
             Campaign campaign = findCampaign(campaignId);
@@ -104,6 +109,7 @@ public class ClientWorkflowService {
     }
 
     // 3. Загрузить креатив (один)
+    @PreAuthorize("hasAuthority('creative:manage')")
     public CampaignResponse addCreative(Long campaignId, CreativeRequest request) {
         return transactions.write(() -> {
             Campaign campaign = findCampaign(campaignId);
@@ -128,6 +134,7 @@ public class ClientWorkflowService {
     }
 
     // 3.1. Удалить креатив
+    @PreAuthorize("hasAuthority('creative:manage')")
     public CampaignResponse deleteCreative(Long campaignId, Long creativeId) {
         return transactions.write(() -> {
             Campaign campaign = findCampaign(campaignId);
@@ -148,6 +155,7 @@ public class ClientWorkflowService {
     }
 
     // 4. отправить на проверку
+    @PreAuthorize("hasAuthority('campaign:submit')")
     public CampaignResponse submitForCheck(Long campaignId) {
         return transactions.write(() -> {
             Campaign campaign = findCampaign(campaignId);
@@ -160,6 +168,7 @@ public class ClientWorkflowService {
     }
 
     // удалить кампанию
+    @PreAuthorize("hasAuthority('campaign:delete')")
     public void deleteCampaign(Long campaignId) {
         transactions.write(() -> {
             Campaign campaign = findCampaign(campaignId);
@@ -169,6 +178,7 @@ public class ClientWorkflowService {
         });
     }
 
+    @PreAuthorize("hasAuthority('campaign:freeze')")
     public CampaignResponse freezeCampaign(Long campaignId) {
         return transactions.write(() -> {
             Campaign campaign = findCampaign(campaignId);
@@ -181,6 +191,7 @@ public class ClientWorkflowService {
     }
 
 
+    @PreAuthorize("hasAuthority('campaign:proceed')")
     public CampaignResponse restartCampaign(Long campaignId, @Valid ProceedCampaignRequest request) {
         return transactions.write(() -> {
             Campaign campaign = findCampaign(campaignId);

@@ -11,6 +11,7 @@ import ifmo.se.lab1app.shared.domain.Campaign;
 import ifmo.se.lab1app.shared.domain.CampaignStatus;
 import ifmo.se.lab1app.shared.infra.CampaignRepository;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 
 import java.util.Arrays;
@@ -33,6 +34,7 @@ public class ModeratorService {
         this.transactions = transactions;
     }
 
+    @PreAuthorize("hasAuthority('campaign:moderate')")
     public CampaignResponse processModerationDecision(Long campaignId, ModerationDecisionRequest request) {
         return transactions.write(() -> {
             Campaign campaign = findCampaign(campaignId);

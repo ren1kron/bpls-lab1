@@ -14,13 +14,14 @@ public class OpenApiConfig {
 
     @Bean
     public OpenAPI campaignWorkflowOpenApi() {
-        final String basicAuth = "basicAuth";
+        final String bearerAuth = "bearerAuth";
         return new OpenAPI()
             .components(new Components()
-                .addSecuritySchemes(basicAuth, new SecurityScheme()
+                .addSecuritySchemes(bearerAuth, new SecurityScheme()
                     .type(SecurityScheme.Type.HTTP)
-                    .scheme("basic")))
-            .addSecurityItem(new SecurityRequirement().addList(basicAuth))
+                    .scheme("bearer")
+                    .bearerFormat("JWT")))
+            .addSecurityItem(new SecurityRequirement().addList(bearerAuth))
             .info(new Info()
                 .title("Campaign Workflow API")
                 .description("REST API для процесса запуска рекламной кампании")

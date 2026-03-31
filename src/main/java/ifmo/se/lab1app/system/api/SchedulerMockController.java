@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
-@PreAuthorize("hasRole('COMPANY_MODERATOR')")
+@PreAuthorize("hasAuthority('scheduler:run')")
 @RestController
 @RequestMapping("/advertisement/scheduler")
 @RequiredArgsConstructor

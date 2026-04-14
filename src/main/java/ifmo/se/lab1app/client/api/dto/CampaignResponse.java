@@ -1,14 +1,16 @@
 package ifmo.se.lab1app.client.api.dto;
 
+import ifmo.se.lab1app.client.domain.creative.Creative;
 import ifmo.se.lab1app.client.domain.enums.CampaignObjective;
 import ifmo.se.lab1app.client.domain.enums.CampaignType;
 import ifmo.se.lab1app.client.domain.enums.StartMode;
 import ifmo.se.lab1app.shared.domain.Campaign;
 import ifmo.se.lab1app.shared.domain.CampaignStatus;
-import jakarta.persistence.Column;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.Collection;
+import java.util.List;
 import java.util.List;
 
 public record CampaignResponse(
@@ -33,7 +35,11 @@ public record CampaignResponse(
 ) {
 
     public static CampaignResponse from(Campaign campaign) {
-        List<CreativeResponse> creativeResponses = campaign.getCreatives().stream()
+        return from(campaign, List.of());
+    }
+
+    public static CampaignResponse from(Campaign campaign, Collection<Creative> creatives) {
+        List<CreativeResponse> creativeResponses = creatives.stream()
             .map(CreativeResponse::from)
             .toList();
 

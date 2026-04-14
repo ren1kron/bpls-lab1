@@ -1,6 +1,5 @@
 package ifmo.se.lab1app.client.domain.creative;
 
-import ifmo.se.lab1app.shared.domain.Campaign;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -21,7 +20,6 @@ public class Creative {
     @Column(nullable = false, length = 50)
     private CreativeType type;
 
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "campaign_id", nullable = false)
-    private Campaign campaign;
+    @Column(name = "campaign_id", nullable = false)
+    private Long campaignId;
 }

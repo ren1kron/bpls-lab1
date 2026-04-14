@@ -3,6 +3,7 @@ package ifmo.se.lab1app.moderator.application;
 import ifmo.se.lab1app.client.api.dto.CampaignResponse;
 import ifmo.se.lab1app.billing.yookassa.application.YooKassaPaymentClient;
 import ifmo.se.lab1app.billing.yookassa.application.YooKassaPaymentResult;
+import ifmo.se.lab1app.client.infra.CreativeRepository;
 import ifmo.se.lab1app.exception.InvalidStateException;
 import ifmo.se.lab1app.exception.NotFoundException;
 import ifmo.se.lab1app.moderator.api.dto.ModerationDecisionRequest;
@@ -21,15 +22,18 @@ import java.util.Arrays;
 public class ModeratorService {
 
     private final CampaignRepository campaignRepository;
+    private final CreativeRepository creativeRepository;
     private final YooKassaPaymentClient yooKassaPaymentClient;
     private final TransactionExecutor transactions;
 
     public ModeratorService(
             CampaignRepository campaignRepository,
+            CreativeRepository creativeRepository,
             YooKassaPaymentClient yooKassaPaymentClient,
             TransactionExecutor transactions
     ) {
         this.campaignRepository = campaignRepository;
+        this.creativeRepository = creativeRepository;
         this.yooKassaPaymentClient = yooKassaPaymentClient;
         this.transactions = transactions;
     }
@@ -54,7 +58,10 @@ public class ModeratorService {
             }
 
             Campaign savedCampaign = campaignRepository.save(campaign);
-            return CampaignResponse.from(savedCampaign);
+            return CampaignResponse.from(
+                    savedCampaign,
+                    creativeRepository.findAllByCampaignIdOrderByIdDesc(savedCampaign.getId())
+            );
         });
     }
 

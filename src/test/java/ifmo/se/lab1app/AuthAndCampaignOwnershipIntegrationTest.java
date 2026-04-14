@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import ifmo.se.lab1app.auth.application.BaseModeratorBootstrap;
 import ifmo.se.lab1app.auth.domain.UserAccount;
 import ifmo.se.lab1app.auth.infra.UserAccountRepository;
+import ifmo.se.lab1app.client.infra.CreativeRepository;
 import ifmo.se.lab1app.shared.domain.UserRole;
 import ifmo.se.lab1app.shared.infra.CampaignRepository;
 import java.util.Map;
@@ -40,6 +41,9 @@ class AuthAndCampaignOwnershipIntegrationTest {
     private CampaignRepository campaignRepository;
 
     @Autowired
+    private CreativeRepository creativeRepository;
+
+    @Autowired
     private UserAccountRepository userAccountRepository;
 
     @Autowired
@@ -57,6 +61,7 @@ class AuthAndCampaignOwnershipIntegrationTest {
         mockMvc = MockMvcBuilders.webAppContextSetup(webApplicationContext)
                 .addFilters(springSecurityFilterChain)
                 .build();
+        creativeRepository.deleteAll();
         campaignRepository.deleteAll();
         userAccountRepository.findAll().stream()
                 .filter(user -> !BOOTSTRAPPED_USERNAMES.contains(user.getUsername()))

@@ -3,6 +3,7 @@ package ifmo.se.lab1app.config;
 import jakarta.persistence.EntityManagerFactory;
 import javax.sql.DataSource;
 import liquibase.integration.spring.SpringLiquibase;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.beans.factory.config.BeanFactoryPostProcessor;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBooleanProperty;
@@ -15,12 +16,24 @@ import org.springframework.util.ObjectUtils;
 @ConditionalOnBooleanProperty(name = "spring.liquibase.enabled", matchIfMissing = true)
 public class LiquibaseConfig {
 
-    private static final String LIQUIBASE_BEAN_NAME = "liquibase";
+    private static final String MAIN_LIQUIBASE_BEAN_NAME = "liquibase";
+    private static final String CREATIVE_LIQUIBASE_BEAN_NAME = "creativeLiquibase";
 
-    @Bean(name = LIQUIBASE_BEAN_NAME)
+    @Bean(name = MAIN_LIQUIBASE_BEAN_NAME)
     SpringLiquibase liquibase(
-            DataSource dataSource,
+            @Qualifier("mainDataSource") DataSource dataSource,
             @Value("${spring.liquibase.change-log:classpath:db/changelog/db.changelog-master.yaml}") String changeLog
+    ) {
+        SpringLiquibase liquibase = new SpringLiquibase();
+        liquibase.setDataSource(dataSource);
+        liquibase.setChangeLog(changeLog);
+        return liquibase;
+    }
+
+    @Bean(name = CREATIVE_LIQUIBASE_BEAN_NAME)
+    SpringLiquibase creativeLiquibase(
+            @Qualifier("creativeDataSource") DataSource dataSource,
+            @Value("${app.liquibase.creative.change-log:classpath:db/changelog/creative/db.changelog-creative.yaml}") String changeLog
     ) {
         SpringLiquibase liquibase = new SpringLiquibase();
         liquibase.setDataSource(dataSource);
@@ -33,7 +46,10 @@ public class LiquibaseConfig {
         return beanFactory -> {
             for (String beanName : beanFactory.getBeanNamesForType(EntityManagerFactory.class, true, false)) {
                 BeanDefinition beanDefinition = beanFactory.getBeanDefinition(beanName);
-                beanDefinition.setDependsOn(appendDependency(beanDefinition.getDependsOn(), LIQUIBASE_BEAN_NAME));
+                String[] dependsOn = beanDefinition.getDependsOn();
+                dependsOn = appendDependency(dependsOn, MAIN_LIQUIBASE_BEAN_NAME);
+                dependsOn = appendDependency(dependsOn, CREATIVE_LIQUIBASE_BEAN_NAME);
+                beanDefinition.setDependsOn(dependsOn);
             }
         };
     }

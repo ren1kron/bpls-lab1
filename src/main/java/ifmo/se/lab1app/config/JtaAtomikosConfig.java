@@ -23,7 +23,13 @@ public class JtaAtomikosConfig {
     @Bean(initMethod = "init", destroyMethod = "close")
     @Primary
     @ConfigurationProperties("app.atomikos.datasource")
-    AtomikosDataSourceBean dataSource() {
+    AtomikosDataSourceBean mainDataSource() {
+        return new AtomikosDataSourceBean();
+    }
+
+    @Bean(initMethod = "init", destroyMethod = "close")
+    @ConfigurationProperties("app.atomikos.creative-datasource")
+    AtomikosDataSourceBean creativeDataSource() {
         return new AtomikosDataSourceBean();
     }
 

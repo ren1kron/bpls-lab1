@@ -1,6 +1,6 @@
 databaseChangeLog:
   - changeSet:
-      id: 003-create-creatives
+      id: creative-001-create-creatives
       author: lab1-app
       changes:
         - createTable:
@@ -28,10 +28,3 @@ databaseChangeLog:
                   type: bigint
                   constraints:
                     nullable: false
-        - addForeignKeyConstraint:
-            baseTableName: creatives
-            baseColumnNames: campaign_id
-            referencedTableName: campaigns
-            referencedColumnNames: id
-            constraintName: fk_creatives_campaign
-            onDelete: CASCADE

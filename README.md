@@ -13,7 +13,7 @@ Spring Boot приложение реализует бизнес-процесс 
 
 1. Поднять PostgreSQL:
 ```bash
-docker compose up -d postgres
+docker compose up -d postgres creative-postgres
 ```
 2. Запустить приложение:
 ```bash
@@ -34,9 +34,14 @@ docker compose up --build
 Важно: JAR собирается на хосте, в Docker он только копируется из `build/libs`.
 
 По умолчанию используются:
-- `DB_URL=jdbc:postgresql://localhost:5432/lab1`
+- `DB_URL=jdbc:postgresql://localhost:6262/lab1`
 - `DB_USERNAME=lab1`
 - `DB_PASSWORD=lab1`
+- `CREATIVE_DB_URL=jdbc:postgresql://localhost:6263/lab1_creatives`
+- `CREATIVE_DB_USERNAME=lab1_creatives`
+- `CREATIVE_DB_PASSWORD=lab1_creatives`
+
+Оба PostgreSQL-контейнера запускаются с `max_prepared_transactions=100`, потому что Atomikos XA использует two-phase commit и PostgreSQL должен поддерживать prepared transactions.
 
 ## Основные REST API
 

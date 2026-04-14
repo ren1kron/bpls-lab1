@@ -3,6 +3,7 @@ package ifmo.se.lab1app.client.application;
 import ifmo.se.lab1app.auth.application.CurrentUserService;
 import ifmo.se.lab1app.client.api.dto.*;
 import ifmo.se.lab1app.client.domain.creative.Creative;
+import ifmo.se.lab1app.client.infra.CreativeRepository;
 import ifmo.se.lab1app.exception.CreativeLimitExceededException;
 import ifmo.se.lab1app.shared.application.TransactionExecutor;
 import ifmo.se.lab1app.shared.infra.CampaignRepository;
@@ -23,15 +24,18 @@ public class ClientWorkflowService {
 
     private static final int MAX_CREATIVES_PER_CAMPAIGN = 10;
     private final CampaignRepository campaignRepository;
+    private final CreativeRepository creativeRepository;
     private final TransactionExecutor transactions;
     private final CurrentUserService currentUserService;
 
     public ClientWorkflowService(
             CampaignRepository campaignRepository,
+            CreativeRepository creativeRepository,
             TransactionExecutor transactions,
             CurrentUserService currentUserService
     ) {
         this.campaignRepository = campaignRepository;
+        this.creativeRepository = creativeRepository;
         this.transactions = transactions;
         this.currentUserService = currentUserService;
     }
@@ -49,7 +53,7 @@ public class ClientWorkflowService {
             campaign.setStatus(CampaignStatus.DRAFT);
             campaign.setOwner(currentUserService.requireCurrentUserAccount());
 
-            return CampaignResponse.from(campaignRepository.save(campaign));
+            return CampaignResponse.from(campaignRepository.save(campaign), List.of());
         });
     }
 
@@ -76,7 +80,7 @@ public class ClientWorkflowService {
                 campaign.setUrl(request.url());
             }
 
-            return CampaignResponse.from(campaignRepository.save(campaign));
+            return toResponse(campaignRepository.save(campaign));
         });
     }
 
@@ -93,7 +97,7 @@ public class ClientWorkflowService {
 
             campaign.setStatus(CampaignStatus.CONFIGURED);
 
-            return CampaignResponse.from(campaignRepository.save(campaign));
+            return toResponse(campaignRepository.save(campaign));
         });
     }
 
@@ -114,7 +118,7 @@ public class ClientWorkflowService {
                 campaign.setDurationDays(request.durationDays());
             }
 
-            return CampaignResponse.from(campaignRepository.save(campaign));
+            return toResponse(campaignRepository.save(campaign));
         });
     }
 
@@ -125,21 +129,21 @@ public class ClientWorkflowService {
             Campaign campaign = findCampaign(campaignId);
             requireStatus(campaign, CampaignStatus.CONFIGURED, CampaignStatus.CREATIVES_UPLOADED, CampaignStatus.MODERATION_REJECTED);
 
-            if (campaign.getCreatives().size() >= MAX_CREATIVES_PER_CAMPAIGN) {
+            if (creativeRepository.countByCampaignId(campaign.getId()) >= MAX_CREATIVES_PER_CAMPAIGN) {
                 throw new CreativeLimitExceededException(
                         "Prohibited to add more than " + MAX_CREATIVES_PER_CAMPAIGN + " creatives to one campaign."
                 );
             }
 
             Creative creative = new Creative();
-            creative.setCampaign(campaign);
+            creative.setCampaignId(campaign.getId());
             creative.setName(request.url());
             creative.setType(request.type());
 
-            campaign.getCreatives().add(creative);
+            creativeRepository.save(creative);
             campaign.setStatus(CampaignStatus.CREATIVES_UPLOADED);
 
-            return CampaignResponse.from(campaignRepository.save(campaign));
+            return toResponse(campaignRepository.save(campaign));
         });
     }
 
@@ -150,17 +154,15 @@ public class ClientWorkflowService {
             Campaign campaign = findCampaign(campaignId);
             requireStatus(campaign, CampaignStatus.CREATIVES_UPLOADED, CampaignStatus.MODERATION_REJECTED);
 
-            campaign.getCreatives().removeIf(
-                    creative -> Objects.equals(creative.getId(), creativeId)
-            );
+            creativeRepository.deleteByCampaignIdAndId(campaign.getId(), creativeId);
 
-            if (campaign.getCreatives().isEmpty()) {
+            if (creativeRepository.countByCampaignId(campaign.getId()) == 0) {
                 campaign.setStatus(CampaignStatus.CONFIGURED);
             } else {
                 campaign.setStatus(CampaignStatus.CREATIVES_UPLOADED);
             }
 
-            return CampaignResponse.from(campaignRepository.save(campaign));
+            return toResponse(campaignRepository.save(campaign));
         });
     }
 
@@ -173,7 +175,7 @@ public class ClientWorkflowService {
 
             campaign.setStatus(CampaignStatus.ON_MODERATION);
 
-            return CampaignResponse.from(campaignRepository.save(campaign));
+            return toResponse(campaignRepository.save(campaign));
         });
     }
 
@@ -184,6 +186,7 @@ public class ClientWorkflowService {
             Campaign campaign = findCampaign(campaignId);
             requireStatus(campaign, CampaignStatus.DRAFT, CampaignStatus.CONFIGURED, CampaignStatus.CREATIVES_UPLOADED, CampaignStatus.MODERATION_REJECTED);
 
+            creativeRepository.deleteAllByCampaignId(campaign.getId());
             campaignRepository.delete(campaign);
         });
     }
@@ -196,7 +199,7 @@ public class ClientWorkflowService {
 
             campaign.setStatus(CampaignStatus.FROZEN);
 
-            return CampaignResponse.from(campaignRepository.save(campaign));
+            return toResponse(campaignRepository.save(campaign));
         });
     }
 
@@ -213,8 +216,15 @@ public class ClientWorkflowService {
                 campaign.setStatus(CampaignStatus.STOPPED);
             }
 
-            return CampaignResponse.from(campaignRepository.save(campaign));
+            return toResponse(campaignRepository.save(campaign));
         });
+    }
+
+    private CampaignResponse toResponse(Campaign campaign) {
+        if (campaign.getId() == null) {
+            return CampaignResponse.from(campaign, List.of());
+        }
+        return CampaignResponse.from(campaign, creativeRepository.findAllByCampaignIdOrderByIdDesc(campaign.getId()));
     }
 
     private Campaign findCampaign(Long campaignId) {

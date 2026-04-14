@@ -1,6 +1,7 @@
 package ifmo.se.lab1app.client.api;
 
 import ifmo.se.lab1app.client.api.dto.ApiErrorResponse;
+import ifmo.se.lab1app.exception.AlreadyExistsException;
 import ifmo.se.lab1app.exception.CreativeLimitExceededException;
 import ifmo.se.lab1app.exception.ExternalServiceException;
 import ifmo.se.lab1app.exception.InvalidStateException;
@@ -9,6 +10,8 @@ import jakarta.servlet.http.HttpServletRequest;
 import java.time.LocalDateTime;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -18,13 +21,40 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 public class ApiExceptionHandler {
 
     @ExceptionHandler(CreativeLimitExceededException.class)
-    public ResponseEntity<ApiErrorResponse> handleCreativeLimitExceeded(NotFoundException exception, HttpServletRequest request) {
+    public ResponseEntity<ApiErrorResponse> handleCreativeLimitExceeded(
+        CreativeLimitExceededException exception,
+        HttpServletRequest request
+    ) {
+        return build(HttpStatus.CONFLICT, exception.getMessage(), request.getRequestURI());
+    }
+
+    @ExceptionHandler(AlreadyExistsException.class)
+    public ResponseEntity<ApiErrorResponse> handleAlreadyExists(
+        AlreadyExistsException exception,
+        HttpServletRequest request
+    ) {
         return build(HttpStatus.CONFLICT, exception.getMessage(), request.getRequestURI());
     }
 
     @ExceptionHandler(NotFoundException.class)
     public ResponseEntity<ApiErrorResponse> handleNotFound(NotFoundException exception, HttpServletRequest request) {
         return build(HttpStatus.NOT_FOUND, exception.getMessage(), request.getRequestURI());
+    }
+
+    @ExceptionHandler(AccessDeniedException.class)
+    public ResponseEntity<ApiErrorResponse> handleAccessDenied(
+        AccessDeniedException exception,
+        HttpServletRequest request
+    ) {
+        return build(HttpStatus.FORBIDDEN, exception.getMessage(), request.getRequestURI());
+    }
+
+    @ExceptionHandler(AuthenticationException.class)
+    public ResponseEntity<ApiErrorResponse> handleAuthentication(
+        AuthenticationException exception,
+        HttpServletRequest request
+    ) {
+        return build(HttpStatus.UNAUTHORIZED, "Authentication failed", request.getRequestURI());
     }
 
     @ExceptionHandler(InvalidStateException.class)

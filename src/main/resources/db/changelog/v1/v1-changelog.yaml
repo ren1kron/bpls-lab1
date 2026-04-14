@@ -5,3 +5,5 @@ databaseChangeLog:
       file: db/changelog/v1/002-create-campaigns.yaml
   - include:
       file: db/changelog/v1/003-create-creatives.yaml
+  - include:
+      file: db/changelog/v1/004-seed-users-and-bind-campaign-owner.yaml

@@ -1,8 +1,7 @@
 package ifmo.se.lab1app.config;
 
-import ifmo.se.lab1app.auth.security.JaasAuthenticationProvider;
+import ifmo.se.lab1app.auth.security.UserAccountAuthenticationProvider;
 import jakarta.servlet.http.HttpServletResponse;
-import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -18,11 +17,13 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 
 @Configuration
 @EnableMethodSecurity
-@RequiredArgsConstructor
 public class SecurityConfig {
 
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
-    private final JaasAuthenticationProvider jaasAuthenticationProvider;
+
+    public SecurityConfig(JwtAuthenticationFilter jwtAuthenticationFilter) {
+        this.jwtAuthenticationFilter = jwtAuthenticationFilter;
+    }
 
     @Bean
     public PasswordEncoder passwordEncoder() {
@@ -30,16 +31,19 @@ public class SecurityConfig {
     }
 
     @Bean
-    public AuthenticationManager authenticationManager() {
-        return new ProviderManager(jaasAuthenticationProvider);
+    public AuthenticationManager authenticationManager(UserAccountAuthenticationProvider userAccountAuthenticationProvider) {
+        return new ProviderManager(userAccountAuthenticationProvider);
     }
 
     @Bean
-    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+    public SecurityFilterChain filterChain(
+            HttpSecurity http,
+            UserAccountAuthenticationProvider userAccountAuthenticationProvider
+    ) {
         http
             .csrf(AbstractHttpConfigurer::disable)
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-            .authenticationProvider(jaasAuthenticationProvider)
+            .authenticationProvider(userAccountAuthenticationProvider)
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers(
                     "/auth/**",

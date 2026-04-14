@@ -4,6 +4,7 @@ import ifmo.se.lab1app.shared.domain.Campaign;
 import ifmo.se.lab1app.shared.domain.CampaignStatus;
 import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface CampaignRepository extends JpaRepository<Campaign, Long> {
@@ -13,4 +14,8 @@ public interface CampaignRepository extends JpaRepository<Campaign, Long> {
     Campaign findByPaymentId(String paymentId);
 
     List<Campaign> findByStatus(CampaignStatus status);
+
+    List<Campaign> findAllByOwnerUsername(String username);
+
+    Optional<Campaign> findByIdAndOwnerUsername(Long id, String username);
 }

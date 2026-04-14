@@ -1,5 +1,6 @@
 package ifmo.se.lab1app.client.application;
 
+import ifmo.se.lab1app.auth.application.CurrentUserService;
 import ifmo.se.lab1app.client.api.dto.*;
 import ifmo.se.lab1app.client.domain.creative.Creative;
 import ifmo.se.lab1app.exception.CreativeLimitExceededException;
@@ -9,7 +10,9 @@ import ifmo.se.lab1app.exception.InvalidStateException;
 import ifmo.se.lab1app.exception.NotFoundException;
 import ifmo.se.lab1app.shared.domain.Campaign;
 import ifmo.se.lab1app.shared.domain.CampaignStatus;
+import ifmo.se.lab1app.shared.domain.UserRole;
 import jakarta.validation.Valid;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 
@@ -21,10 +24,16 @@ public class ClientWorkflowService {
     private static final int MAX_CREATIVES_PER_CAMPAIGN = 10;
     private final CampaignRepository campaignRepository;
     private final TransactionExecutor transactions;
+    private final CurrentUserService currentUserService;
 
-    public ClientWorkflowService(CampaignRepository campaignRepository, TransactionExecutor transactions) {
+    public ClientWorkflowService(
+            CampaignRepository campaignRepository,
+            TransactionExecutor transactions,
+            CurrentUserService currentUserService
+    ) {
         this.campaignRepository = campaignRepository;
         this.transactions = transactions;
+        this.currentUserService = currentUserService;
     }
 
     // 1. создать черновик кампании
@@ -38,6 +47,7 @@ public class ClientWorkflowService {
             campaign.setStartMode(request.startMode());
             campaign.setUrl(request.url());
             campaign.setStatus(CampaignStatus.DRAFT);
+            campaign.setOwner(currentUserService.requireCurrentUserAccount());
 
             return CampaignResponse.from(campaignRepository.save(campaign));
         });
@@ -208,8 +218,13 @@ public class ClientWorkflowService {
     }
 
     private Campaign findCampaign(Long campaignId) {
-        return campaignRepository.findById(campaignId)
-                .orElseThrow(() -> new NotFoundException("Campaign with id=" + campaignId + " was never found"));
+        if (currentUserService.hasRole(UserRole.COMPANY_MODERATOR)) {
+            return campaignRepository.findById(campaignId)
+                    .orElseThrow(() -> new NotFoundException("Campaign with id=" + campaignId + " was never found"));
+        }
+
+        return campaignRepository.findByIdAndOwnerUsername(campaignId, currentUserService.requireAuthenticatedUser().username())
+                .orElseThrow(() -> new AccessDeniedException("You can modify only your own campaigns"));
     }
 
     private void requireStatus(Campaign campaign, CampaignStatus... allowedStatuses) {

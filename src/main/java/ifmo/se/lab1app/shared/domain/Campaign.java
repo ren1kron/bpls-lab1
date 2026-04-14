@@ -4,6 +4,7 @@ import ifmo.se.lab1app.client.domain.creative.Creative;
 import ifmo.se.lab1app.client.domain.enums.CampaignObjective;
 import ifmo.se.lab1app.client.domain.enums.CampaignType;
 import ifmo.se.lab1app.client.domain.enums.StartMode;
+import ifmo.se.lab1app.auth.domain.UserAccount;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -18,6 +19,8 @@ import jakarta.persistence.OrderBy;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.JoinColumn;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -74,6 +77,10 @@ public class Campaign {
 
     @Column
     private LocalDateTime frozenAt;
+
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "owner_id", nullable = false)
+    private UserAccount owner;
 
     @OneToMany(mappedBy = "campaign", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     @OrderBy("id DESC")

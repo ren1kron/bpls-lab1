@@ -1,27 +1,33 @@
 package ifmo.se.lab1app.auth.jaas;
 
+import ifmo.se.lab1app.auth.infra.UserAccountRepository;
 import java.util.Map;
 import javax.security.auth.login.AppConfigurationEntry;
 import javax.security.auth.login.Configuration;
-import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
 @Component
-public class XmlUserJaasConfiguration extends Configuration {
+public class DatabaseUserJaasConfiguration extends Configuration {
 
     public static final String LOGIN_CONTEXT_NAME = "lab1-app";
-    public static final String USERS_XML_LOCATION_OPTION = "usersXmlLocation";
+    static final String USER_ACCOUNT_REPOSITORY_OPTION = "userAccountRepository";
+    static final String PASSWORD_ENCODER_OPTION = "passwordEncoder";
 
     private final AppConfigurationEntry[] entries;
 
-    public XmlUserJaasConfiguration(
-            @Value("${app.security.jaas.users-xml:classpath:security/users.xml}") String usersXmlLocation
+    public DatabaseUserJaasConfiguration(
+            UserAccountRepository userAccountRepository,
+            PasswordEncoder passwordEncoder
     ) {
         this.entries = new AppConfigurationEntry[] {
                 new AppConfigurationEntry(
-                        XmlUserLoginModule.class.getName(),
+                        DatabaseUserLoginModule.class.getName(),
                         AppConfigurationEntry.LoginModuleControlFlag.REQUIRED,
-                        Map.of(USERS_XML_LOCATION_OPTION, usersXmlLocation)
+                        Map.of(
+                                USER_ACCOUNT_REPOSITORY_OPTION, userAccountRepository,
+                                PASSWORD_ENCODER_OPTION, passwordEncoder
+                        )
                 )
         };
     }

@@ -5,7 +5,7 @@ import ifmo.se.lab1app.auth.jaas.JaasPrivilegePrincipal;
 import ifmo.se.lab1app.auth.jaas.JaasRolePrincipal;
 import ifmo.se.lab1app.auth.jaas.JaasUserPrincipal;
 import ifmo.se.lab1app.auth.jaas.UsernamePasswordCallbackHandler;
-import ifmo.se.lab1app.auth.jaas.XmlUserJaasConfiguration;
+import ifmo.se.lab1app.auth.jaas.DatabaseUserJaasConfiguration;
 import ifmo.se.lab1app.shared.domain.UserRole;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -24,7 +24,7 @@ import org.springframework.stereotype.Component;
 @RequiredArgsConstructor
 public class JaasAuthenticationProvider implements AuthenticationProvider {
 
-    private final XmlUserJaasConfiguration jaasConfiguration;
+    private final DatabaseUserJaasConfiguration jaasConfiguration;
 
     @Override
     public Authentication authenticate(Authentication authentication) throws AuthenticationException {
@@ -33,7 +33,7 @@ public class JaasAuthenticationProvider implements AuthenticationProvider {
 
         try {
             LoginContext loginContext = new LoginContext(
-                    XmlUserJaasConfiguration.LOGIN_CONTEXT_NAME,
+                    DatabaseUserJaasConfiguration.LOGIN_CONTEXT_NAME,
                     null,
                     new UsernamePasswordCallbackHandler(username, password),
                     jaasConfiguration

@@ -42,7 +42,7 @@ public class AuthService {
     }
 
     public LoginResponse register(RegisterRequest request) {
-        return transactions.write(() -> {
+        transactions.write(() -> {
             if (userAccountRepository.existsByUsername(request.username())) {
                 throw new AlreadyExistsException("Пользователь с username=" + request.username() + " уже существует");
             }
@@ -52,15 +52,9 @@ public class AuthService {
             userAccount.setPassword(passwordEncoder.encode(request.password()));
             userAccount.setRole(UserRole.CLIENT);
 
-            UserAccount savedUser = userAccountRepository.save(userAccount);
-            AuthenticatedUser user = AuthenticatedUser.fromRole(savedUser.getUsername(), savedUser.getRole());
-
-            return new LoginResponse(
-                    jwtTokenService.issueToken(user),
-                    "Bearer",
-                    toUserResponse(user)
-            );
+            userAccountRepository.save(userAccount);
         });
+        return login(new LoginRequest(request.username(), request.password()));
     }
 
     public UserResponse currentUser(Authentication authentication) {

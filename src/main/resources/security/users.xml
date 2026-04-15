@@ -1,5 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<users>
-    <user username="client" password="{noop}client" role="CLIENT"/>
-    <user username="moderator" password="{noop}moderator" role="COMPANY_MODERATOR"/>
-</users>

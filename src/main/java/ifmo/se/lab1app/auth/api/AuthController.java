@@ -29,15 +29,15 @@ public class AuthController {
 
     @PostMapping("/login")
     @Operation(summary = "Войти по имени пользователя и паролю",
-            description = "Аутентифицирует пользователя по данным из БД и возвращает JWT. "
-                    + "Предзаданные пользователи: client/client (CLIENT), moderator/moderator (COMPANY_MODERATOR)")
+            description = "Аутентифицирует пользователя через JAAS по данным из БД и возвращает JWT. "
+                    + "Базовый модератор: moderator/moderator (COMPANY_MODERATOR)")
     public LoginResponse login(@RequestBody @Valid LoginRequest request) {
         return authService.login(request);
     }
 
     @PostMapping("/register")
     @Operation(summary = "Зарегистрировать клиента",
-            description = "Создает пользователя роли CLIENT, сохраняет его в БД и возвращает JWT")
+            description = "Создает пользователя роли CLIENT, сохраняет его в БД, аутентифицирует через JAAS и возвращает JWT")
     public LoginResponse register(@RequestBody @Valid RegisterRequest request) {
         return authService.register(request);
     }

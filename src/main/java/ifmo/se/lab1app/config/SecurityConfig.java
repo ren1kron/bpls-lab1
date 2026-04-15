@@ -1,6 +1,6 @@
 package ifmo.se.lab1app.config;
 
-import ifmo.se.lab1app.auth.security.UserAccountAuthenticationProvider;
+import ifmo.se.lab1app.auth.security.JaasAuthenticationProvider;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -31,19 +31,19 @@ public class SecurityConfig {
     }
 
     @Bean
-    public AuthenticationManager authenticationManager(UserAccountAuthenticationProvider userAccountAuthenticationProvider) {
-        return new ProviderManager(userAccountAuthenticationProvider);
+    public AuthenticationManager authenticationManager(JaasAuthenticationProvider jaasAuthenticationProvider) {
+        return new ProviderManager(jaasAuthenticationProvider);
     }
 
     @Bean
     public SecurityFilterChain filterChain(
             HttpSecurity http,
-            UserAccountAuthenticationProvider userAccountAuthenticationProvider
+            JaasAuthenticationProvider jaasAuthenticationProvider
     ) {
         http
             .csrf(AbstractHttpConfigurer::disable)
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-            .authenticationProvider(userAccountAuthenticationProvider)
+            .authenticationProvider(jaasAuthenticationProvider)
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers(
                     "/auth/**",

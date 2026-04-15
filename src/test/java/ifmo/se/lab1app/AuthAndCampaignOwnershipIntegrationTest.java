@@ -5,17 +5,25 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import ifmo.se.lab1app.auth.application.BaseModeratorBootstrap;
 import ifmo.se.lab1app.auth.domain.UserAccount;
 import ifmo.se.lab1app.auth.infra.UserAccountRepository;
+import ifmo.se.lab1app.auth.jaas.DatabaseUserJaasConfiguration;
+import ifmo.se.lab1app.auth.jaas.JaasPrivilegePrincipal;
+import ifmo.se.lab1app.auth.jaas.JaasRolePrincipal;
+import ifmo.se.lab1app.auth.jaas.JaasUserPrincipal;
+import ifmo.se.lab1app.auth.jaas.UsernamePasswordCallbackHandler;
 import ifmo.se.lab1app.client.infra.CreativeRepository;
 import ifmo.se.lab1app.shared.domain.UserRole;
 import ifmo.se.lab1app.shared.infra.CampaignRepository;
 import java.util.Map;
 import java.util.Set;
+import javax.security.auth.Subject;
+import javax.security.auth.login.LoginContext;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.FilterChainProxy;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
@@ -50,6 +58,12 @@ class AuthAndCampaignOwnershipIntegrationTest {
     private BaseModeratorBootstrap baseModeratorBootstrap;
 
     @Autowired
+    private DatabaseUserJaasConfiguration databaseUserJaasConfiguration;
+
+    @Autowired
+    private PasswordEncoder passwordEncoder;
+
+    @Autowired
     @Qualifier("springSecurityFilterChain")
     private FilterChainProxy springSecurityFilterChain;
 
@@ -81,6 +95,35 @@ class AuthAndCampaignOwnershipIntegrationTest {
                 .andExpect(jsonPath("$.accessToken").isNotEmpty())
                 .andExpect(jsonPath("$.user.username").value("moderator"))
                 .andExpect(jsonPath("$.user.role").value("COMPANY_MODERATOR"));
+    }
+
+    @Test
+    void shouldAuthenticateDatabaseUserThroughJaasLoginContext() throws Exception {
+        UserAccount user = new UserAccount();
+        user.setUsername("jaas-client");
+        user.setPassword(passwordEncoder.encode("secret123"));
+        user.setRole(UserRole.CLIENT);
+        userAccountRepository.save(user);
+
+        LoginContext loginContext = new LoginContext(
+                DatabaseUserJaasConfiguration.LOGIN_CONTEXT_NAME,
+                null,
+                new UsernamePasswordCallbackHandler("jaas-client", "secret123"),
+                databaseUserJaasConfiguration
+        );
+
+        loginContext.login();
+
+        Subject subject = loginContext.getSubject();
+        assertThat(subject.getPrincipals(JaasUserPrincipal.class))
+                .extracting(JaasUserPrincipal::getName)
+                .containsExactly("jaas-client");
+        assertThat(subject.getPrincipals(JaasRolePrincipal.class))
+                .extracting(JaasRolePrincipal::getName)
+                .containsExactly("CLIENT");
+        assertThat(subject.getPrincipals(JaasPrivilegePrincipal.class))
+                .extracting(JaasPrivilegePrincipal::getName)
+                .contains("campaign:create", "campaign:view");
     }
 
     @Test
@@ -127,6 +170,35 @@ class AuthAndCampaignOwnershipIntegrationTest {
         assertThat(savedUser.getRole().name()).isEqualTo("CLIENT");
         assertThat(savedUser.getPassword()).startsWith("{bcrypt}");
         assertThat(savedUser.getPassword()).doesNotContain("secret123");
+
+        mockMvc.perform(post("/auth/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(Map.of(
+                                "username", "alice",
+                                "password", "secret123"
+                        ))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.accessToken").isNotEmpty())
+                .andExpect(jsonPath("$.user.username").value("alice"));
+    }
+
+    @Test
+    void shouldRejectInvalidLoginCredentials() throws Exception {
+        mockMvc.perform(post("/auth/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(Map.of(
+                                "username", "moderator",
+                                "password", "wrong-password"
+                        ))))
+                .andExpect(status().isUnauthorized());
+
+        mockMvc.perform(post("/auth/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(Map.of(
+                                "username", "unknown-user",
+                                "password", "secret123"
+                        ))))
+                .andExpect(status().isUnauthorized());
     }
 
     @Test

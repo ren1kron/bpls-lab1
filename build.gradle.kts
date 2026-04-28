@@ -1,54 +1,44 @@
 plugins {
+    id("org.springframework.boot") version "4.0.2" apply false
     java
-    id("org.springframework.boot") version "4.0.2"
-    id("io.spring.dependency-management") version "1.1.7"
 }
 
 group = "ifmo.se"
 version = "0.0.1-SNAPSHOT"
 description = "lab1-app"
 
-java {
-    toolchain {
-        languageVersion = JavaLanguageVersion.of(17)
+subprojects {
+    group = rootProject.group
+    version = rootProject.version
+
+    apply(plugin = "java-library")
+
+    repositories {
+        mavenCentral()
     }
-}
 
-configurations {
-    compileOnly {
-        extendsFrom(configurations.annotationProcessor.get())
+    dependencies {
+        add("implementation", platform("org.springframework.boot:spring-boot-dependencies:4.0.2"))
+        add("testImplementation", platform("org.springframework.boot:spring-boot-dependencies:4.0.2"))
+
+        add("compileOnly", "org.projectlombok:lombok:1.18.42")
+        add("annotationProcessor", "org.projectlombok:lombok:1.18.42")
+        add("testImplementation", "org.springframework.boot:spring-boot-starter-test")
+        add("testRuntimeOnly", "com.h2database:h2")
+        add("testRuntimeOnly", "org.junit.platform:junit-platform-launcher")
     }
-}
 
-repositories {
-    mavenCentral()
-}
+    extensions.configure<JavaPluginExtension> {
+        toolchain {
+            languageVersion = JavaLanguageVersion.of(17)
+        }
+    }
 
-dependencies {
-    implementation("com.atomikos:transactions-jdbc:6.0.0:jakarta")
-    implementation("com.atomikos:transactions-jta:6.0.0:jakarta")
-    implementation("org.springframework.boot:spring-boot-starter-data-jpa")
-    implementation("org.springframework.boot:spring-boot-starter-security")
-    implementation("org.springframework.boot:spring-boot-starter-validation")
-    implementation("org.springframework.boot:spring-boot-starter-web")
-    implementation("org.springframework.boot:spring-boot-starter-quartz")
-    implementation("org.apache.kafka:kafka-clients:3.9.0")
-    implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.5")
-    implementation("org.liquibase:liquibase-core")
-    compileOnly("org.projectlombok:lombok")
-    developmentOnly("org.springframework.boot:spring-boot-devtools")
-    developmentOnly("org.springframework.boot:spring-boot-docker-compose")
-    runtimeOnly("org.postgresql:postgresql")
-    annotationProcessor("org.projectlombok:lombok")
-    testImplementation("org.springframework.boot:spring-boot-starter-test")
-    testRuntimeOnly("com.h2database:h2")
-    testRuntimeOnly("org.junit.platform:junit-platform-launcher")
-}
+    configurations.named("compileOnly") {
+        extendsFrom(configurations.getByName("annotationProcessor"))
+    }
 
-tasks.withType<Test> {
-    useJUnitPlatform()
-}
-
-tasks.named("jar") {
-    enabled = false
+    tasks.withType<Test> {
+        useJUnitPlatform()
+    }
 }

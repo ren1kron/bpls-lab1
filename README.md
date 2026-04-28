@@ -17,21 +17,25 @@ docker compose up -d postgres creative-postgres zookeeper kafka kafka-init
 ```
 2. Запустить приложение:
 ```bash
-./gradlew bootRun
+./gradlew :api-app:bootRun
+```
+3. В отдельном терминале запустить worker:
+```bash
+./gradlew :creative-worker:bootRun
 ```
 
-### Полностью в Docker (2 app nodes + postgres + Kafka)
+### Полностью в Docker (API app + creative worker + postgres + Kafka)
 
 1. Собрать JAR локально:
 ```bash
-./gradlew clean bootJar
+./gradlew clean :api-app:bootJar :creative-worker:bootJar
 ```
 2. Поднять контейнеры:
 ```bash
 docker compose up --build
 ```
 
-Важно: JAR собирается на хосте, в Docker он только копируется из `build/libs`.
+Важно: JAR собирается на хосте, в Docker он только копируется из `api-app/build/libs` или `creative-worker/build/libs`.
 
 По умолчанию используются:
 - `DB_URL=jdbc:postgresql://localhost:6262/lab1`
@@ -44,9 +48,9 @@ docker compose up --build
 
 Оба PostgreSQL-контейнера запускаются с `max_prepared_transactions=100`, потому что Atomikos XA использует two-phase commit и PostgreSQL должен поддерживать prepared transactions.
 
-В Docker Compose доступны два узла приложения:
-- `http://localhost:26125` -> `app-node-1`
-- `http://localhost:26126` -> `app-node-2`
+В Docker Compose доступны два приложения:
+- `http://localhost:26125` -> `api-app`
+- `creative-worker` не публикует HTTP-порт и только читает Kafka.
 
 Kafka-топики создаются контейнером `kafka-init`:
 - `creative-upload-requests`
@@ -78,8 +82,8 @@ Kafka-топики создаются контейнером `kafka-init`:
 
 ## Swagger / OpenAPI
 
-- Swagger UI: `http://localhost:8080/swagger-ui`
-- OpenAPI JSON: `http://localhost:8080/api-docs`
+- Swagger UI: `http://localhost:26125/swagger-ui`
+- OpenAPI JSON: `http://localhost:26125/api-docs`
 
 ## Тесты
 
@@ -93,7 +97,7 @@ Kafka-топики создаются контейнером `kafka-init`:
 
 1. Собрать и поднять окружение:
 ```bash
-./gradlew clean bootJar
+./gradlew clean :api-app:bootJar :creative-worker:bootJar
 docker compose up --build
 ```
 2. Зарегистрировать клиента, создать кампанию, настроить ее, затем вызвать:
@@ -115,6 +119,6 @@ curl -H "Authorization: Bearer {token}" http://localhost:26125/advertisement/{ca
 ```
 5. Посмотреть, какой узел обработал событие, и прочитать result topic:
 ```bash
-docker compose logs app-node-1 app-node-2
+docker compose logs api-app creative-worker
 docker compose exec kafka kafka-console-consumer --bootstrap-server kafka:29092 --topic creative-upload-results --from-beginning
 ```

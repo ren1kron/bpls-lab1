@@ -1,9 +1,11 @@
 services:
-  app-node-1:
+  api-app:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: lab1-app-node-1
+      args:
+        JAR_FILE: api-app/build/libs/*.jar
+    container_name: lab1-api-app
     depends_on:
       postgres:
         condition: service_healthy
@@ -19,16 +21,18 @@ services:
       CREATIVE_DB_USERNAME: lab1_creatives
       CREATIVE_DB_PASSWORD: lab1_creatives
       KAFKA_BOOTSTRAP_SERVERS: kafka:29092
-      CREATIVE_UPLOAD_PRODUCER_CLIENT_ID: lab1-app-node-1-outbox
+      CREATIVE_UPLOAD_PRODUCER_CLIENT_ID: lab1-api-outbox
     ports:
       - "127.0.0.1:26125:26125"
     restart: unless-stopped
 
-  app-node-2:
+  creative-worker:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: lab1-app-node-2
+      args:
+        JAR_FILE: creative-worker/build/libs/*.jar
+    container_name: lab1-creative-worker
     depends_on:
       postgres:
         condition: service_healthy
@@ -44,9 +48,6 @@ services:
       CREATIVE_DB_USERNAME: lab1_creatives
       CREATIVE_DB_PASSWORD: lab1_creatives
       KAFKA_BOOTSTRAP_SERVERS: kafka:29092
-      CREATIVE_UPLOAD_PRODUCER_CLIENT_ID: lab1-app-node-2-outbox
-    ports:
-      - "127.0.0.1:26126:26125"
     restart: unless-stopped
 
   postgres:

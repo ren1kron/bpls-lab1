@@ -3,6 +3,7 @@ package ifmo.se.lab1app.shared.domain;
 public enum CampaignStatus {
     DRAFT,
     CONFIGURED,
+    CREATIVES_LOADING,
     CREATIVES_UPLOADED,
     ON_MODERATION,
     MODERATION_REJECTED,

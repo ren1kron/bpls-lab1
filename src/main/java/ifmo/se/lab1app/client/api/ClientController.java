@@ -59,13 +59,23 @@ public class ClientController {
     }
 
     @PostMapping("/{campaignId}/creatives")
+    @ResponseStatus(HttpStatus.ACCEPTED)
     @Operation(summary = "Добавить кампании один креатив")
-    public CampaignResponse uploadCreative(
+    public CreativeLoadTaskResponse uploadCreative(
             @Parameter(description = "Идентификатор экземпляра процесса (campaignId)")
             @PathVariable Long campaignId,
             @Valid @RequestBody CreativeRequest request
     ) {
         return clientService.addCreative(campaignId, request);
+    }
+
+    @GetMapping("/{campaignId}/creative-loads/{taskId}")
+    @Operation(summary = "Получить состояние асинхронной загрузки креатива")
+    public CreativeLoadTaskResponse getCreativeLoadTask(
+            @PathVariable Long campaignId,
+            @PathVariable String taskId
+    ) {
+        return clientService.getCreativeLoadTask(campaignId, taskId);
     }
 
     @DeleteMapping("/{campaignId}/creatives/{creativeId}")

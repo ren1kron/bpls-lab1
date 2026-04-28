@@ -22,4 +22,7 @@ public class Creative {
 
     @Column(name = "campaign_id", nullable = false)
     private Long campaignId;
+
+    @Column(name = "upload_task_id", unique = true, length = 36)
+    private String uploadTaskId;
 }

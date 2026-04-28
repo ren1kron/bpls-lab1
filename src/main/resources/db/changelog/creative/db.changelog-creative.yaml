@@ -1,3 +1,5 @@
 databaseChangeLog:
   - include:
       file: db/changelog/creative/v1/001-create-creatives.yaml
+  - include:
+      file: db/changelog/creative/v1/002-add-upload-task-id-to-creatives.yaml

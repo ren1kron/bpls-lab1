@@ -1,0 +1,15 @@
+databaseChangeLog:
+  - changeSet:
+      id: creative-002-add-upload-task-id-to-creatives
+      author: lab1-app
+      changes:
+        - addColumn:
+            tableName: creatives
+            columns:
+              - column:
+                  name: upload_task_id
+                  type: varchar(36)
+        - addUniqueConstraint:
+            tableName: creatives
+            columnNames: upload_task_id
+            constraintName: uk_creatives_upload_task_id

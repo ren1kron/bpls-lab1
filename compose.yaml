@@ -1,14 +1,16 @@
 services:
-  app:
+  app-node-1:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: lab1-app
+    container_name: lab1-app-node-1
     depends_on:
       postgres:
         condition: service_healthy
       creative-postgres:
         condition: service_healthy
+      kafka-init:
+        condition: service_completed_successfully
     environment:
       DB_URL: jdbc:postgresql://postgres:5432/lab1
       DB_USERNAME: lab1
@@ -16,8 +18,35 @@ services:
       CREATIVE_DB_URL: jdbc:postgresql://creative-postgres:5432/lab1_creatives
       CREATIVE_DB_USERNAME: lab1_creatives
       CREATIVE_DB_PASSWORD: lab1_creatives
+      KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      CREATIVE_UPLOAD_PRODUCER_CLIENT_ID: lab1-app-node-1-outbox
     ports:
       - "127.0.0.1:26125:26125"
+    restart: unless-stopped
+
+  app-node-2:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: lab1-app-node-2
+    depends_on:
+      postgres:
+        condition: service_healthy
+      creative-postgres:
+        condition: service_healthy
+      kafka-init:
+        condition: service_completed_successfully
+    environment:
+      DB_URL: jdbc:postgresql://postgres:5432/lab1
+      DB_USERNAME: lab1
+      DB_PASSWORD: lab1
+      CREATIVE_DB_URL: jdbc:postgresql://creative-postgres:5432/lab1_creatives
+      CREATIVE_DB_USERNAME: lab1_creatives
+      CREATIVE_DB_PASSWORD: lab1_creatives
+      KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      CREATIVE_UPLOAD_PRODUCER_CLIENT_ID: lab1-app-node-2-outbox
+    ports:
+      - "127.0.0.1:26126:26125"
     restart: unless-stopped
 
   postgres:
@@ -55,6 +84,52 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.6.1
+    container_name: lab1-zookeeper
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    ports:
+      - "2181:2181"
+
+  kafka:
+    image: confluentinc/cp-kafka:7.6.1
+    container_name: lab1-kafka
+    depends_on:
+      - zookeeper
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:29092,PLAINTEXT_HOST://0.0.0.0:9092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:29092,PLAINTEXT_HOST://localhost:9092
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+    ports:
+      - "9092:9092"
+    healthcheck:
+      test: [ "CMD-SHELL", "kafka-broker-api-versions --bootstrap-server localhost:9092 >/dev/null 2>&1" ]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  kafka-init:
+    image: confluentinc/cp-kafka:7.6.1
+    container_name: lab1-kafka-init
+    depends_on:
+      kafka:
+        condition: service_healthy
+    command:
+      - bash
+      - -c
+      - |
+        set -e
+        kafka-topics --bootstrap-server kafka:29092 --create --if-not-exists --topic creative-upload-requests --partitions 6 --replication-factor 1
+        kafka-topics --bootstrap-server kafka:29092 --create --if-not-exists --topic creative-upload-results --partitions 6 --replication-factor 1
 
 volumes:
   postgres_data:

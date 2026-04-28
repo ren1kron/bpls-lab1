@@ -32,6 +32,7 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-validation")
     implementation("org.springframework.boot:spring-boot-starter-web")
     implementation("org.springframework.boot:spring-boot-starter-quartz")
+    implementation("org.apache.kafka:kafka-clients:3.9.0")
     implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.5")
     implementation("org.liquibase:liquibase-core")
     compileOnly("org.projectlombok:lombok")

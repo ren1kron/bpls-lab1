@@ -1,17 +1,25 @@
 package ifmo.se.lab1app.client.application;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import ifmo.se.lab1app.auth.application.CurrentUserService;
 import ifmo.se.lab1app.client.api.dto.*;
-import ifmo.se.lab1app.client.domain.creative.Creative;
 import ifmo.se.lab1app.client.infra.CreativeRepository;
 import ifmo.se.lab1app.exception.CreativeLimitExceededException;
 import ifmo.se.lab1app.shared.application.TransactionExecutor;
+import ifmo.se.lab1app.shared.domain.CreativeUploadStatus;
+import ifmo.se.lab1app.shared.domain.CreativeUploadTask;
+import ifmo.se.lab1app.shared.domain.KafkaOutboxEvent;
 import ifmo.se.lab1app.shared.infra.CampaignRepository;
 import ifmo.se.lab1app.exception.InvalidStateException;
 import ifmo.se.lab1app.exception.NotFoundException;
 import ifmo.se.lab1app.shared.domain.Campaign;
 import ifmo.se.lab1app.shared.domain.CampaignStatus;
 import ifmo.se.lab1app.shared.domain.UserRole;
+import ifmo.se.lab1app.shared.infra.CreativeUploadTaskRepository;
+import ifmo.se.lab1app.shared.infra.KafkaOutboxEventRepository;
+import ifmo.se.lab1app.system.kafka.CreativeUploadKafkaProperties;
+import ifmo.se.lab1app.system.kafka.dto.CreativeUploadRequestEvent;
 import jakarta.validation.Valid;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -23,21 +31,38 @@ import java.util.*;
 public class ClientWorkflowService {
 
     private static final int MAX_CREATIVES_PER_CAMPAIGN = 10;
+    private static final Set<CreativeUploadStatus> ACTIVE_UPLOAD_STATUSES = EnumSet.of(
+            CreativeUploadStatus.PENDING,
+            CreativeUploadStatus.PROCESSING
+    );
+
     private final CampaignRepository campaignRepository;
     private final CreativeRepository creativeRepository;
+    private final CreativeUploadTaskRepository creativeUploadTaskRepository;
+    private final KafkaOutboxEventRepository outboxRepository;
     private final TransactionExecutor transactions;
     private final CurrentUserService currentUserService;
+    private final ObjectMapper objectMapper;
+    private final CreativeUploadKafkaProperties kafkaProperties;
 
     public ClientWorkflowService(
             CampaignRepository campaignRepository,
             CreativeRepository creativeRepository,
+            CreativeUploadTaskRepository creativeUploadTaskRepository,
+            KafkaOutboxEventRepository outboxRepository,
             TransactionExecutor transactions,
-            CurrentUserService currentUserService
+            CurrentUserService currentUserService,
+            ObjectMapper objectMapper,
+            CreativeUploadKafkaProperties kafkaProperties
     ) {
         this.campaignRepository = campaignRepository;
         this.creativeRepository = creativeRepository;
+        this.creativeUploadTaskRepository = creativeUploadTaskRepository;
+        this.outboxRepository = outboxRepository;
         this.transactions = transactions;
         this.currentUserService = currentUserService;
+        this.objectMapper = objectMapper;
+        this.kafkaProperties = kafkaProperties;
     }
 
     // 1. создать черновик кампании
@@ -124,26 +149,51 @@ public class ClientWorkflowService {
 
     // 3. Загрузить креатив (один)
     @PreAuthorize("hasAuthority('creative:manage')")
-    public CampaignResponse addCreative(Long campaignId, CreativeRequest request) {
+    public CreativeLoadTaskResponse addCreative(Long campaignId, CreativeRequest request) {
         return transactions.write(() -> {
-            Campaign campaign = findCampaign(campaignId);
-            requireStatus(campaign, CampaignStatus.CONFIGURED, CampaignStatus.CREATIVES_UPLOADED, CampaignStatus.MODERATION_REJECTED);
+            Campaign campaign = findCampaignForUpdate(campaignId);
+            requireStatus(
+                    campaign,
+                    CampaignStatus.CONFIGURED,
+                    CampaignStatus.CREATIVES_LOADING,
+                    CampaignStatus.CREATIVES_UPLOADED,
+                    CampaignStatus.MODERATION_REJECTED
+            );
 
-            if (creativeRepository.countByCampaignId(campaign.getId()) >= MAX_CREATIVES_PER_CAMPAIGN) {
+            long activeTasks = creativeUploadTaskRepository.countByCampaignIdAndStatusIn(
+                    campaign.getId(),
+                    ACTIVE_UPLOAD_STATUSES
+            );
+            long totalScheduledCreatives = creativeRepository.countByCampaignId(campaign.getId()) + activeTasks;
+            if (totalScheduledCreatives >= MAX_CREATIVES_PER_CAMPAIGN) {
                 throw new CreativeLimitExceededException(
                         "Prohibited to add more than " + MAX_CREATIVES_PER_CAMPAIGN + " creatives to one campaign."
                 );
             }
 
-            Creative creative = new Creative();
-            creative.setCampaignId(campaign.getId());
-            creative.setName(request.url());
-            creative.setType(request.type());
+            CreativeUploadTask task = new CreativeUploadTask();
+            task.setId(UUID.randomUUID().toString());
+            task.setCampaignId(campaign.getId());
+            task.setUrl(request.url());
+            task.setType(request.type());
+            task.setStatus(CreativeUploadStatus.PENDING);
 
-            creativeRepository.save(creative);
-            campaign.setStatus(CampaignStatus.CREATIVES_UPLOADED);
+            campaign.setStatus(CampaignStatus.CREATIVES_LOADING);
+            CreativeUploadTask savedTask = creativeUploadTaskRepository.save(task);
+            Campaign savedCampaign = campaignRepository.save(campaign);
+            outboxRepository.save(requestEvent(savedTask));
 
-            return toResponse(campaignRepository.save(campaign));
+            return CreativeLoadTaskResponse.from(savedTask, savedCampaign.getStatus());
+        });
+    }
+
+    @PreAuthorize("hasAuthority('creative:manage')")
+    public CreativeLoadTaskResponse getCreativeLoadTask(Long campaignId, String taskId) {
+        return transactions.read(() -> {
+            Campaign campaign = findCampaign(campaignId);
+            CreativeUploadTask task = creativeUploadTaskRepository.findByIdAndCampaignId(taskId, campaign.getId())
+                    .orElseThrow(() -> new NotFoundException("Creative upload task with id=" + taskId + " was never found"));
+            return CreativeLoadTaskResponse.from(task, campaign.getStatus());
         });
     }
 
@@ -187,6 +237,7 @@ public class ClientWorkflowService {
             requireStatus(campaign, CampaignStatus.DRAFT, CampaignStatus.CONFIGURED, CampaignStatus.CREATIVES_UPLOADED, CampaignStatus.MODERATION_REJECTED);
 
             creativeRepository.deleteAllByCampaignId(campaign.getId());
+            creativeUploadTaskRepository.deleteAllByCampaignId(campaign.getId());
             campaignRepository.delete(campaign);
         });
     }
@@ -237,12 +288,43 @@ public class ClientWorkflowService {
                 .orElseThrow(() -> new AccessDeniedException("You can modify only your own campaigns"));
     }
 
+    private Campaign findCampaignForUpdate(Long campaignId) {
+        if (currentUserService.hasRole(UserRole.COMPANY_MODERATOR)) {
+            return campaignRepository.findByIdForUpdate(campaignId)
+                    .orElseThrow(() -> new NotFoundException("Campaign with id=" + campaignId + " was never found"));
+        }
+
+        return campaignRepository.findByIdAndOwnerUsernameForUpdate(
+                        campaignId,
+                        currentUserService.requireAuthenticatedUser().username()
+                )
+                .orElseThrow(() -> new AccessDeniedException("You can modify only your own campaigns"));
+    }
+
     private void requireStatus(Campaign campaign, CampaignStatus... allowedStatuses) {
         if (Arrays.stream(allowedStatuses).noneMatch(status -> status == campaign.getStatus())) {
             throw new InvalidStateException(
                     "Incorrect move from status " + campaign.getStatus() +
                             ". Allowed: " + Arrays.toString(allowedStatuses)
             );
+        }
+    }
+
+    private KafkaOutboxEvent requestEvent(CreativeUploadTask task) {
+        CreativeUploadRequestEvent event = new CreativeUploadRequestEvent(
+                task.getId(),
+                task.getCampaignId(),
+                task.getUrl(),
+                task.getType()
+        );
+        try {
+            return KafkaOutboxEvent.unpublished(
+                    kafkaProperties.getUploadRequestTopic(),
+                    task.getId(),
+                    objectMapper.writeValueAsString(event)
+            );
+        } catch (JsonProcessingException exception) {
+            throw new IllegalStateException("Failed to serialize creative upload request event", exception);
         }
     }
 }

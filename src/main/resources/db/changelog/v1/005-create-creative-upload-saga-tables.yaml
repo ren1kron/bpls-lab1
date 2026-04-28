@@ -1,0 +1,104 @@
+databaseChangeLog:
+  - changeSet:
+      id: 005-create-creative-upload-tasks
+      author: lab1-app
+      changes:
+        - createTable:
+            tableName: creative_upload_tasks
+            columns:
+              - column:
+                  name: id
+                  type: varchar(36)
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: campaign_id
+                  type: bigint
+                  constraints:
+                    nullable: false
+              - column:
+                  name: url
+                  type: varchar(2048)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: type
+                  type: varchar(50)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: status
+                  type: varchar(50)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: creative_id
+                  type: bigint
+              - column:
+                  name: error
+                  type: text
+              - column:
+                  name: created_at
+                  type: timestamp
+                  constraints:
+                    nullable: false
+              - column:
+                  name: updated_at
+                  type: timestamp
+                  constraints:
+                    nullable: false
+        - createIndex:
+            indexName: idx_creative_upload_tasks_campaign_status
+            tableName: creative_upload_tasks
+            columns:
+              - column:
+                  name: campaign_id
+              - column:
+                  name: status
+
+  - changeSet:
+      id: 005-create-kafka-outbox-events
+      author: lab1-app
+      changes:
+        - createTable:
+            tableName: kafka_outbox_events
+            columns:
+              - column:
+                  name: id
+                  type: bigint
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: topic
+                  type: varchar(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: event_key
+                  type: varchar(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: payload
+                  type: text
+                  constraints:
+                    nullable: false
+              - column:
+                  name: published_at
+                  type: timestamp
+              - column:
+                  name: created_at
+                  type: timestamp
+                  constraints:
+                    nullable: false
+        - createIndex:
+            indexName: idx_kafka_outbox_events_unpublished
+            tableName: kafka_outbox_events
+            columns:
+              - column:
+                  name: published_at
+              - column:
+                  name: id

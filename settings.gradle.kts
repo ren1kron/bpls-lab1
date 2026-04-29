@@ -1,2 +1,2 @@
 rootProject.name = "lab1-app"
-include("core", "api-app", "creative-worker")
+include("core", "api-app", "creative-worker", "onec-eis-connector")

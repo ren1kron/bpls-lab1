@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import ifmo.se.lab1app.auth.application.CurrentUserService;
 import ifmo.se.lab1app.client.api.dto.*;
 import ifmo.se.lab1app.client.infra.CreativeRepository;
+import ifmo.se.lab1app.eis.CampaignEisEventPublisher;
 import ifmo.se.lab1app.exception.CreativeLimitExceededException;
 import ifmo.se.lab1app.shared.application.TransactionExecutor;
 import ifmo.se.lab1app.shared.domain.CreativeUploadStatus;
@@ -44,6 +45,7 @@ public class ClientWorkflowService {
     private final CurrentUserService currentUserService;
     private final ObjectMapper objectMapper;
     private final CreativeUploadKafkaProperties kafkaProperties;
+    private final CampaignEisEventPublisher eisEventPublisher;
 
     public ClientWorkflowService(
             CampaignRepository campaignRepository,
@@ -53,7 +55,8 @@ public class ClientWorkflowService {
             TransactionExecutor transactions,
             CurrentUserService currentUserService,
             ObjectMapper objectMapper,
-            CreativeUploadKafkaProperties kafkaProperties
+            CreativeUploadKafkaProperties kafkaProperties,
+            CampaignEisEventPublisher eisEventPublisher
     ) {
         this.campaignRepository = campaignRepository;
         this.creativeRepository = creativeRepository;
@@ -63,6 +66,7 @@ public class ClientWorkflowService {
         this.currentUserService = currentUserService;
         this.objectMapper = objectMapper;
         this.kafkaProperties = kafkaProperties;
+        this.eisEventPublisher = eisEventPublisher;
     }
 
     // 1. создать черновик кампании
@@ -78,7 +82,9 @@ public class ClientWorkflowService {
             campaign.setStatus(CampaignStatus.DRAFT);
             campaign.setOwner(currentUserService.requireCurrentUserAccount());
 
-            return CampaignResponse.from(campaignRepository.save(campaign), List.of());
+            Campaign savedCampaign = campaignRepository.save(campaign);
+            eisEventPublisher.publish("CampaignCreated", null, savedCampaign.getStatus(), savedCampaign);
+            return CampaignResponse.from(savedCampaign, List.of());
         });
     }
 
@@ -105,7 +111,9 @@ public class ClientWorkflowService {
                 campaign.setUrl(request.url());
             }
 
-            return toResponse(campaignRepository.save(campaign));
+            Campaign savedCampaign = campaignRepository.save(campaign);
+            eisEventPublisher.publish("CampaignUpdated", campaign.getStatus(), savedCampaign.getStatus(), savedCampaign);
+            return toResponse(savedCampaign);
         });
     }
 
@@ -120,9 +128,12 @@ public class ClientWorkflowService {
             campaign.setRequestedStartAt(request.requestedStartAt());
             campaign.setDurationDays(request.durationDays());
 
+            CampaignStatus statusBefore = campaign.getStatus();
             campaign.setStatus(CampaignStatus.CONFIGURED);
 
-            return toResponse(campaignRepository.save(campaign));
+            Campaign savedCampaign = campaignRepository.save(campaign);
+            eisEventPublisher.publish("CampaignConfigured", statusBefore, savedCampaign.getStatus(), savedCampaign);
+            return toResponse(savedCampaign);
         });
     }
 
@@ -143,7 +154,9 @@ public class ClientWorkflowService {
                 campaign.setDurationDays(request.durationDays());
             }
 
-            return toResponse(campaignRepository.save(campaign));
+            Campaign savedCampaign = campaignRepository.save(campaign);
+            eisEventPublisher.publish("CampaignUpdated", campaign.getStatus(), savedCampaign.getStatus(), savedCampaign);
+            return toResponse(savedCampaign);
         });
     }
 
@@ -206,13 +219,16 @@ public class ClientWorkflowService {
 
             creativeRepository.deleteByCampaignIdAndId(campaign.getId(), creativeId);
 
+            CampaignStatus statusBefore = campaign.getStatus();
             if (creativeRepository.countByCampaignId(campaign.getId()) == 0) {
                 campaign.setStatus(CampaignStatus.CONFIGURED);
             } else {
                 campaign.setStatus(CampaignStatus.CREATIVES_UPLOADED);
             }
 
-            return toResponse(campaignRepository.save(campaign));
+            Campaign savedCampaign = campaignRepository.save(campaign);
+            eisEventPublisher.publish("CreativeDeleted", statusBefore, savedCampaign.getStatus(), savedCampaign);
+            return toResponse(savedCampaign);
         });
     }
 
@@ -223,9 +239,12 @@ public class ClientWorkflowService {
             Campaign campaign = findCampaign(campaignId);
             requireStatus(campaign, CampaignStatus.CREATIVES_UPLOADED, CampaignStatus.MODERATION_REJECTED);
 
+            CampaignStatus statusBefore = campaign.getStatus();
             campaign.setStatus(CampaignStatus.ON_MODERATION);
 
-            return toResponse(campaignRepository.save(campaign));
+            Campaign savedCampaign = campaignRepository.save(campaign);
+            eisEventPublisher.publish("CampaignSubmittedToModeration", statusBefore, savedCampaign.getStatus(), savedCampaign);
+            return toResponse(savedCampaign);
         });
     }
 
@@ -238,6 +257,7 @@ public class ClientWorkflowService {
 
             creativeRepository.deleteAllByCampaignId(campaign.getId());
             creativeUploadTaskRepository.deleteAllByCampaignId(campaign.getId());
+            eisEventPublisher.publish("CampaignDeleted", campaign.getStatus(), null, "deleted before launch", campaign);
             campaignRepository.delete(campaign);
         });
     }
@@ -248,9 +268,12 @@ public class ClientWorkflowService {
             Campaign campaign = findCampaign(campaignId);
             requireStatus(campaign, CampaignStatus.ACTIVE);
 
+            CampaignStatus statusBefore = campaign.getStatus();
             campaign.setStatus(CampaignStatus.FROZEN);
 
-            return toResponse(campaignRepository.save(campaign));
+            Campaign savedCampaign = campaignRepository.save(campaign);
+            eisEventPublisher.publish("CampaignFrozen", statusBefore, savedCampaign.getStatus(), savedCampaign);
+            return toResponse(savedCampaign);
         });
     }
 
@@ -261,13 +284,17 @@ public class ClientWorkflowService {
             Campaign campaign = findCampaign(campaignId);
             requireStatus(campaign, CampaignStatus.FROZEN);
 
+            CampaignStatus statusBefore = campaign.getStatus();
             if (request.proceed()) {
                 campaign.setStatus(CampaignStatus.ACTIVE);
             } else {
                 campaign.setStatus(CampaignStatus.STOPPED);
             }
 
-            return toResponse(campaignRepository.save(campaign));
+            Campaign savedCampaign = campaignRepository.save(campaign);
+            String eventType = Boolean.TRUE.equals(request.proceed()) ? "CampaignResumed" : "CampaignFinishedByClient";
+            eisEventPublisher.publish(eventType, statusBefore, savedCampaign.getStatus(), savedCampaign);
+            return toResponse(savedCampaign);
         });
     }
 

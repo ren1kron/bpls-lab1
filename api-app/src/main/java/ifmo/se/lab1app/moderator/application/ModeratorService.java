@@ -4,6 +4,7 @@ import ifmo.se.lab1app.client.api.dto.CampaignResponse;
 import ifmo.se.lab1app.billing.yookassa.application.YooKassaPaymentClient;
 import ifmo.se.lab1app.billing.yookassa.application.YooKassaPaymentResult;
 import ifmo.se.lab1app.client.infra.CreativeRepository;
+import ifmo.se.lab1app.eis.CampaignEisEventPublisher;
 import ifmo.se.lab1app.exception.InvalidStateException;
 import ifmo.se.lab1app.exception.NotFoundException;
 import ifmo.se.lab1app.moderator.api.dto.ModerationDecisionRequest;
@@ -25,17 +26,20 @@ public class ModeratorService {
     private final CreativeRepository creativeRepository;
     private final YooKassaPaymentClient yooKassaPaymentClient;
     private final TransactionExecutor transactions;
+    private final CampaignEisEventPublisher eisEventPublisher;
 
     public ModeratorService(
             CampaignRepository campaignRepository,
             CreativeRepository creativeRepository,
             YooKassaPaymentClient yooKassaPaymentClient,
-            TransactionExecutor transactions
+            TransactionExecutor transactions,
+            CampaignEisEventPublisher eisEventPublisher
     ) {
         this.campaignRepository = campaignRepository;
         this.creativeRepository = creativeRepository;
         this.yooKassaPaymentClient = yooKassaPaymentClient;
         this.transactions = transactions;
+        this.eisEventPublisher = eisEventPublisher;
     }
 
     @PreAuthorize("hasAuthority('campaign:moderate')")
@@ -44,6 +48,7 @@ public class ModeratorService {
             Campaign campaign = findCampaign(campaignId);
             requireStatus(campaign, CampaignStatus.ON_MODERATION);
 
+            CampaignStatus statusBefore = campaign.getStatus();
             campaign.setModerationComment(request.comment());
 
             if (Boolean.TRUE.equals(request.approved())) {
@@ -58,6 +63,12 @@ public class ModeratorService {
             }
 
             Campaign savedCampaign = campaignRepository.save(campaign);
+            if (Boolean.TRUE.equals(request.approved())) {
+                eisEventPublisher.publish("ModerationApproved", statusBefore, savedCampaign.getStatus(), request.comment(), savedCampaign);
+                eisEventPublisher.publish("PaymentInvoiceIssued", statusBefore, savedCampaign.getStatus(), "invoice issued", savedCampaign);
+            } else {
+                eisEventPublisher.publish("ModerationRejected", statusBefore, savedCampaign.getStatus(), request.comment(), savedCampaign);
+            }
             return CampaignResponse.from(
                     savedCampaign,
                     creativeRepository.findAllByCampaignIdOrderByIdDesc(savedCampaign.getId())

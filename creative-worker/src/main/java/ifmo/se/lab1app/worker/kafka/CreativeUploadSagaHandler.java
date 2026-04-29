@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import ifmo.se.lab1app.client.domain.creative.Creative;
 import ifmo.se.lab1app.client.infra.CreativeRepository;
+import ifmo.se.lab1app.eis.CampaignEisEventPublisher;
 import ifmo.se.lab1app.shared.application.TransactionExecutor;
 import ifmo.se.lab1app.shared.domain.Campaign;
 import ifmo.se.lab1app.shared.domain.CampaignStatus;
@@ -37,6 +38,7 @@ public class CreativeUploadSagaHandler {
     private final TransactionExecutor transactions;
     private final ObjectMapper objectMapper;
     private final CreativeUploadKafkaProperties kafkaProperties;
+    private final CampaignEisEventPublisher eisEventPublisher;
 
     public CreativeUploadSagaHandler(
             CreativeUploadTaskRepository taskRepository,
@@ -45,7 +47,8 @@ public class CreativeUploadSagaHandler {
             KafkaOutboxEventRepository outboxRepository,
             TransactionExecutor transactions,
             ObjectMapper objectMapper,
-            CreativeUploadKafkaProperties kafkaProperties
+            CreativeUploadKafkaProperties kafkaProperties,
+            CampaignEisEventPublisher eisEventPublisher
     ) {
         this.taskRepository = taskRepository;
         this.campaignRepository = campaignRepository;
@@ -54,6 +57,7 @@ public class CreativeUploadSagaHandler {
         this.transactions = transactions;
         this.objectMapper = objectMapper;
         this.kafkaProperties = kafkaProperties;
+        this.eisEventPublisher = eisEventPublisher;
     }
 
     public void handleRequestPayload(String payload) {
@@ -89,6 +93,7 @@ public class CreativeUploadSagaHandler {
 
         Campaign campaign = campaignRepository.findByIdForUpdate(task.getCampaignId())
                 .orElseThrow(() -> new IllegalStateException("Campaign not found for taskId=" + event.taskId()));
+        CampaignStatus statusBefore = campaign.getStatus();
 
         task.setStatus(CreativeUploadStatus.PROCESSING);
         Creative creative = creativeRepository.findByUploadTaskId(task.getId())
@@ -106,6 +111,7 @@ public class CreativeUploadSagaHandler {
         task.setError(null);
         refreshCampaignStatusAfterTaskFinished(campaign);
         outboxRepository.save(resultEvent(task));
+        eisEventPublisher.publish("CreativeAdded", statusBefore, campaign.getStatus(), campaign);
     }
 
     private void markTaskFailed(String taskId, String error) {

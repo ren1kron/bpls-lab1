@@ -20,6 +20,11 @@ import org.springframework.transaction.support.TransactionTemplate;
 @Configuration
 public class JtaAtomikosConfig {
 
+    private static final String ATOMIKOS_TM_UNIQUE_NAME = "com.atomikos.icatch.tm_unique_name";
+    private static final String ATOMIKOS_LOG_BASE_NAME = "com.atomikos.icatch.log_base_name";
+    private static final String ATOMIKOS_LOG_BASE_DIR = "com.atomikos.icatch.log_base_dir";
+    private static final String ATOMIKOS_OUTPUT_DIR = "com.atomikos.icatch.output_dir";
+
     @Bean(initMethod = "init", destroyMethod = "close")
     @Primary
     @ConfigurationProperties("app.atomikos.datasource")
@@ -34,7 +39,11 @@ public class JtaAtomikosConfig {
     }
 
     @Bean(initMethod = "init", destroyMethod = "close")
-    UserTransactionManager atomikosTransactionManager() {
+    UserTransactionManager atomikosTransactionManager(
+            @Value("${spring.application.name:lab1-app}") String applicationName,
+            @Value("${app.atomikos.log-dir:}") String atomikosLogDir
+    ) {
+        configureAtomikosLogs(applicationName, atomikosLogDir);
         UserTransactionManager transactionManager = new UserTransactionManager();
         transactionManager.setForceShutdown(false);
         return transactionManager;
@@ -42,8 +51,11 @@ public class JtaAtomikosConfig {
 
     @Bean
     UserTransaction atomikosUserTransaction(
+            @Value("${spring.application.name:lab1-app}") String applicationName,
+            @Value("${app.atomikos.log-dir:}") String atomikosLogDir,
             @Value("${app.atomikos.default-jta-timeout-seconds:60}") int defaultJtaTimeoutSeconds
     ) throws SystemException {
+        configureAtomikosLogs(applicationName, atomikosLogDir);
         UserTransactionImp userTransaction = new UserTransactionImp();
         userTransaction.setTransactionTimeout(defaultJtaTimeoutSeconds);
         return userTransaction;
@@ -80,5 +92,16 @@ public class JtaAtomikosConfig {
             properties.put("hibernate.transaction.jta.platform", new SpringJtaPlatform(transactionManager));
             properties.put("jakarta.persistence.transactionType", "JTA");
         };
+    }
+
+    private void configureAtomikosLogs(String applicationName, String atomikosLogDir) {
+        String normalizedApplicationName = applicationName.replaceAll("[^a-zA-Z0-9_.-]", "_");
+        String resolvedLogDir = atomikosLogDir == null || atomikosLogDir.isBlank()
+                ? System.getProperty("java.io.tmpdir") + "/lab1-app-atomikos/" + normalizedApplicationName
+                : atomikosLogDir;
+        System.setProperty(ATOMIKOS_TM_UNIQUE_NAME, normalizedApplicationName + "-tm");
+        System.setProperty(ATOMIKOS_LOG_BASE_NAME, normalizedApplicationName + "-tmlog");
+        System.setProperty(ATOMIKOS_LOG_BASE_DIR, resolvedLogDir);
+        System.setProperty(ATOMIKOS_OUTPUT_DIR, resolvedLogDir);
     }
 }

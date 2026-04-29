@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<connector xmlns="https://jakarta.ee/xml/ns/jakartaee"
+           xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+           xsi:schemaLocation="https://jakarta.ee/xml/ns/jakartaee https://jakarta.ee/xml/ns/jakartaee/connector_2_1.xsd"
+           version="2.1">
+    <display-name>1C EIS HTTP Resource Adapter</display-name>
+    <vendor-name>ifmo.se</vendor-name>
+    <eis-type>1C HTTP Service</eis-type>
+    <resourceadapter-version>1.0</resourceadapter-version>
+
+    <resourceadapter>
+        <resourceadapter-class>ifmo.se.lab1app.eis.onec.ra.OneCResourceAdapter</resourceadapter-class>
+        <outbound-resourceadapter>
+            <connection-definition>
+                <managedconnectionfactory-class>ifmo.se.lab1app.eis.onec.ra.OneCManagedConnectionFactory</managedconnectionfactory-class>
+                <config-property>
+                    <config-property-name>endpointUrl</config-property-name>
+                    <config-property-type>java.lang.String</config-property-type>
+                    <config-property-value>http://93.100.213.224:1337/aviasales/hs/campaigns/events</config-property-value>
+                </config-property>
+                <config-property>
+                    <config-property-name>username</config-property-name>
+                    <config-property-type>java.lang.String</config-property-type>
+                    <config-property-value>api</config-property-value>
+                </config-property>
+                <config-property>
+                    <config-property-name>password</config-property-name>
+                    <config-property-type>java.lang.String</config-property-type>
+                    <config-property-value>123</config-property-value>
+                </config-property>
+                <config-property>
+                    <config-property-name>connectTimeoutMillis</config-property-name>
+                    <config-property-type>java.lang.Integer</config-property-type>
+                    <config-property-value>5000</config-property-value>
+                </config-property>
+                <config-property>
+                    <config-property-name>requestTimeoutMillis</config-property-name>
+                    <config-property-type>java.lang.Integer</config-property-type>
+                    <config-property-value>10000</config-property-value>
+                </config-property>
+                <connectionfactory-interface>ifmo.se.lab1app.eis.onec.OneCConnectionFactory</connectionfactory-interface>
+                <connectionfactory-impl-class>ifmo.se.lab1app.eis.onec.ra.OneCConnectionFactoryImpl</connectionfactory-impl-class>
+                <connection-interface>ifmo.se.lab1app.eis.onec.OneCConnection</connection-interface>
+                <connection-impl-class>ifmo.se.lab1app.eis.onec.ra.OneCConnectionImpl</connection-impl-class>
+            </connection-definition>
+            <transaction-support>NoTransaction</transaction-support>
+            <reauthentication-support>false</reauthentication-support>
+        </outbound-resourceadapter>
+    </resourceadapter>
+</connector>

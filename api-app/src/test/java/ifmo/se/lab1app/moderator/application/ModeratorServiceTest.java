@@ -9,6 +9,7 @@ import ifmo.se.lab1app.billing.yookassa.application.YooKassaPaymentClient;
 import ifmo.se.lab1app.billing.yookassa.application.YooKassaPaymentResult;
 import ifmo.se.lab1app.client.api.dto.CampaignResponse;
 import ifmo.se.lab1app.client.infra.CreativeRepository;
+import ifmo.se.lab1app.eis.CampaignEisEventPublisher;
 import ifmo.se.lab1app.moderator.api.dto.ModerationDecisionRequest;
 import ifmo.se.lab1app.shared.application.TransactionExecutor;
 import ifmo.se.lab1app.shared.domain.Campaign;
@@ -36,6 +37,9 @@ class ModeratorServiceTest {
 
     @Mock
     private TransactionExecutor transactionExecutor;
+
+    @Mock
+    private CampaignEisEventPublisher eisEventPublisher;
 
     @InjectMocks
     private ModeratorService moderatorService;

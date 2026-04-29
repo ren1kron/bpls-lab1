@@ -41,3 +41,6 @@ out/
 
 ### Atomikos ###
 tmlog*.log
+
+### Local WildFly ###
+wildfly-*.Final/

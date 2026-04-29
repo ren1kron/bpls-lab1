@@ -7,6 +7,8 @@ import static org.mockito.Mockito.when;
 
 import ifmo.se.lab1app.billing.yookassa.application.YooKassaPaymentClient;
 import ifmo.se.lab1app.billing.yookassa.application.YooKassaPaymentResult;
+import ifmo.se.lab1app.auth.application.CurrentUserService;
+import ifmo.se.lab1app.auth.domain.UserAccount;
 import ifmo.se.lab1app.client.api.dto.CampaignResponse;
 import ifmo.se.lab1app.client.infra.CreativeRepository;
 import ifmo.se.lab1app.eis.CampaignEisEventPublisher;
@@ -14,6 +16,7 @@ import ifmo.se.lab1app.moderator.api.dto.ModerationDecisionRequest;
 import ifmo.se.lab1app.shared.application.TransactionExecutor;
 import ifmo.se.lab1app.shared.domain.Campaign;
 import ifmo.se.lab1app.shared.domain.CampaignStatus;
+import ifmo.se.lab1app.shared.domain.UserRole;
 import ifmo.se.lab1app.shared.infra.CampaignRepository;
 import java.util.Optional;
 import org.junit.jupiter.api.Test;
@@ -41,6 +44,9 @@ class ModeratorServiceTest {
     @Mock
     private CampaignEisEventPublisher eisEventPublisher;
 
+    @Mock
+    private CurrentUserService currentUserService;
+
     @InjectMocks
     private ModeratorService moderatorService;
 
@@ -56,12 +62,17 @@ class ModeratorServiceTest {
         campaign.setId(42L);
         campaign.setName("Spring campaign");
         campaign.setStatus(CampaignStatus.ON_MODERATION);
+        UserAccount moderator = new UserAccount();
+        moderator.setId(1L);
+        moderator.setUsername("moderator");
+        moderator.setRole(UserRole.COMPANY_MODERATOR);
 
         when(campaignRepository.findById(42L)).thenReturn(Optional.of(campaign));
         when(yooKassaPaymentClient.createPayment(campaign))
             .thenReturn(new YooKassaPaymentResult("payment-1", "pending", "https://pay.example/confirm"));
         when(campaignRepository.save(any(Campaign.class))).thenAnswer(invocation -> invocation.getArgument(0));
         when(creativeRepository.findAllByCampaignIdOrderByIdDesc(42L)).thenReturn(java.util.List.of());
+        when(currentUserService.requireCurrentUserAccount()).thenReturn(moderator);
 
         var response = moderatorService.processModerationDecision(
             42L,

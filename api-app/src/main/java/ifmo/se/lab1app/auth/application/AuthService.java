@@ -27,12 +27,14 @@ public class AuthService {
     private final UserAccountRepository userAccountRepository;
     private final PasswordEncoder passwordEncoder;
     private final TransactionExecutor transactions;
+    private final UserSyncToOneCService userSyncToOneCService;
 
     public LoginResponse login(LoginRequest request) {
         Authentication authToken = new UsernamePasswordAuthenticationToken(
                 request.username(), request.password());
         Authentication authenticated = authenticationManager.authenticate(authToken);
         AuthenticatedUser user = (AuthenticatedUser) authenticated.getPrincipal();
+        userAccountRepository.findByUsername(user.username()).ifPresent(userSyncToOneCService::syncUserBestEffort);
 
         return new LoginResponse(
                 jwtTokenService.issueToken(user),
@@ -42,7 +44,7 @@ public class AuthService {
     }
 
     public LoginResponse register(RegisterRequest request) {
-        transactions.write(() -> {
+        UserAccount createdUser = transactions.write(() -> {
             if (userAccountRepository.existsByUsername(request.username())) {
                 throw new AlreadyExistsException("Пользователь с username=" + request.username() + " уже существует");
             }
@@ -52,8 +54,9 @@ public class AuthService {
             userAccount.setPassword(passwordEncoder.encode(request.password()));
             userAccount.setRole(UserRole.CLIENT);
 
-            userAccountRepository.save(userAccount);
+            return userAccountRepository.save(userAccount);
         });
+        userSyncToOneCService.syncUserBestEffort(createdUser);
         return login(new LoginRequest(request.username(), request.password()));
     }
 

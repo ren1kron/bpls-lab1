@@ -1,5 +1,7 @@
 package ifmo.se.lab1app.moderator.application;
 
+import ifmo.se.lab1app.auth.application.CurrentUserService;
+import ifmo.se.lab1app.auth.domain.UserAccount;
 import ifmo.se.lab1app.client.api.dto.CampaignResponse;
 import ifmo.se.lab1app.billing.yookassa.application.YooKassaPaymentClient;
 import ifmo.se.lab1app.billing.yookassa.application.YooKassaPaymentResult;
@@ -27,19 +29,22 @@ public class ModeratorService {
     private final YooKassaPaymentClient yooKassaPaymentClient;
     private final TransactionExecutor transactions;
     private final CampaignEisEventPublisher eisEventPublisher;
+    private final CurrentUserService currentUserService;
 
     public ModeratorService(
             CampaignRepository campaignRepository,
             CreativeRepository creativeRepository,
             YooKassaPaymentClient yooKassaPaymentClient,
             TransactionExecutor transactions,
-            CampaignEisEventPublisher eisEventPublisher
+            CampaignEisEventPublisher eisEventPublisher,
+            CurrentUserService currentUserService
     ) {
         this.campaignRepository = campaignRepository;
         this.creativeRepository = creativeRepository;
         this.yooKassaPaymentClient = yooKassaPaymentClient;
         this.transactions = transactions;
         this.eisEventPublisher = eisEventPublisher;
+        this.currentUserService = currentUserService;
     }
 
     @PreAuthorize("hasAuthority('campaign:moderate')")
@@ -63,11 +68,12 @@ public class ModeratorService {
             }
 
             Campaign savedCampaign = campaignRepository.save(campaign);
+            UserAccount operationUser = currentUserService.requireCurrentUserAccount();
             if (Boolean.TRUE.equals(request.approved())) {
-                eisEventPublisher.publish("ModerationApproved", statusBefore, savedCampaign.getStatus(), request.comment(), savedCampaign);
-                eisEventPublisher.publish("PaymentInvoiceIssued", statusBefore, savedCampaign.getStatus(), "invoice issued", savedCampaign);
+                eisEventPublisher.publish("ModerationApproved", statusBefore, savedCampaign.getStatus(), request.comment(), savedCampaign, operationUser);
+                eisEventPublisher.publish("PaymentInvoiceIssued", statusBefore, savedCampaign.getStatus(), "invoice issued", savedCampaign, operationUser);
             } else {
-                eisEventPublisher.publish("ModerationRejected", statusBefore, savedCampaign.getStatus(), request.comment(), savedCampaign);
+                eisEventPublisher.publish("ModerationRejected", statusBefore, savedCampaign.getStatus(), request.comment(), savedCampaign, operationUser);
             }
             return CampaignResponse.from(
                     savedCampaign,

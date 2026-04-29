@@ -41,7 +41,7 @@ public class OneCManagedConnectionFactory implements ManagedConnectionFactory, R
     public ManagedConnection createManagedConnection(Subject subject, ConnectionRequestInfo connectionRequestInfo) {
         return new OneCManagedConnection(this);
     }
-
+    //можно ли перезапустить то что уже есть?
     @Override
     public ManagedConnection matchManagedConnections(
             @SuppressWarnings("rawtypes") Set connectionSet,

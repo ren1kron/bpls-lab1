@@ -34,7 +34,7 @@ public class OneCConnectionFactoryImpl implements OneCConnectionFactory, Referen
         }
         return (OneCConnection) connectionManager.allocateConnection(managedConnectionFactory, null);
     }
-
+    //референс из jndi
     @Override
     public void setReference(Reference reference) {
         this.reference = reference;

@@ -17,6 +17,7 @@ public class BaseModeratorBootstrap implements ApplicationRunner {
 
     private final UserAccountRepository userAccountRepository;
     private final PasswordEncoder passwordEncoder;
+    private final UserSyncToOneCService userSyncToOneCService;
 
     @Value("${app.security.bootstrap.moderator.enabled:true}")
     private boolean enabled;
@@ -44,7 +45,8 @@ public class BaseModeratorBootstrap implements ApplicationRunner {
         moderator.setUsername(username);
         moderator.setPassword(passwordEncoder.encode(password));
         moderator.setRole(UserRole.COMPANY_MODERATOR);
-        userAccountRepository.save(moderator);
+        UserAccount saved = userAccountRepository.save(moderator);
+        userSyncToOneCService.syncUserBestEffort(saved);
     }
 
     private void normalizeModerator(UserAccount moderator) {
@@ -62,7 +64,10 @@ public class BaseModeratorBootstrap implements ApplicationRunner {
         }
 
         if (changed) {
-            userAccountRepository.save(moderator);
+            UserAccount saved = userAccountRepository.save(moderator);
+            userSyncToOneCService.syncUserBestEffort(saved);
+        } else {
+            userSyncToOneCService.syncUserBestEffort(moderator);
         }
     }
 

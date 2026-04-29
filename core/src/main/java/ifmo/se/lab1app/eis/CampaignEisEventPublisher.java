@@ -1,6 +1,7 @@
 package ifmo.se.lab1app.eis;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import ifmo.se.lab1app.auth.domain.UserAccount;
 import ifmo.se.lab1app.client.domain.creative.Creative;
 import ifmo.se.lab1app.client.domain.enums.CampaignObjective;
 import ifmo.se.lab1app.client.domain.enums.CampaignType;
@@ -44,7 +45,19 @@ public class CampaignEisEventPublisher {
             CampaignStatus statusAfter,
             Campaign campaign
     ) {
-        publish(eventType, statusBefore, statusAfter, null, campaign);
+        // Отправляем в EIS событие с параметрами: eventType, statusBefore, statusAfter, campaign.
+        publish(eventType, statusBefore, statusAfter, null, campaign, null);
+    }
+
+    public void publish(
+            String eventType,
+            CampaignStatus statusBefore,
+            CampaignStatus statusAfter,
+            Campaign campaign,
+            UserAccount operationUser
+    ) {
+        // Отправляем в EIS событие с параметрами: eventType, statusBefore, statusAfter, campaign, operationUser.
+        publish(eventType, statusBefore, statusAfter, null, campaign, operationUser);
     }
 
     public void publish(
@@ -54,11 +67,24 @@ public class CampaignEisEventPublisher {
             String comment,
             Campaign campaign
     ) {
+        // Отправляем в EIS событие с параметрами: eventType, statusBefore, statusAfter, comment, campaign.
+        publish(eventType, statusBefore, statusAfter, comment, campaign, null);
+    }
+
+    public void publish(
+            String eventType,
+            CampaignStatus statusBefore,
+            CampaignStatus statusAfter,
+            String comment,
+            Campaign campaign,
+            UserAccount operationUser
+    ) {
+        // Отправляем в EIS событие с параметрами: eventType, statusBefore, statusAfter, comment, campaign, operationUser.
         if (!properties.enabled()) {
             return;
         }
         try {
-            String payload = objectMapper.writeValueAsString(toEvent(eventType, statusBefore, statusAfter, comment, campaign));
+            String payload = objectMapper.writeValueAsString(toEvent(eventType, statusBefore, statusAfter, comment, campaign, operationUser));
             sendWithJca(payload);
             log.info("Published campaign event to EIS eventType={} campaignId={}", eventType, campaign.getId());
         } catch (Exception exception) {
@@ -74,7 +100,8 @@ public class CampaignEisEventPublisher {
             CampaignStatus statusBefore,
             CampaignStatus statusAfter,
             String comment,
-            Campaign campaign
+            Campaign campaign,
+            UserAccount operationUser
     ) {
         List<CreativeEisDto> creatives = campaign.getId() == null
                 ? List.of()
@@ -87,6 +114,7 @@ public class CampaignEisEventPublisher {
                 statusBefore,
                 statusAfter,
                 comment,
+                UserEisDto.from(operationUser != null ? operationUser : campaign.getOwner()),
                 CampaignEisDto.from(campaign, creatives)
         );
     }
@@ -123,6 +151,7 @@ public class CampaignEisEventPublisher {
             CampaignStatus statusBefore,
             CampaignStatus statusAfter,
             String comment,
+            UserEisDto user,
             CampaignEisDto campaign
     ) {
     }
@@ -141,6 +170,7 @@ public class CampaignEisEventPublisher {
             LocalDateTime actualStartAt,
             LocalDateTime actualEndAt,
             Collection<CreativeEisDto> creatives,
+            UserEisDto user,
             String moderationComment,
             String paymentConfirmationUrl,
             String paymentId,
@@ -163,6 +193,7 @@ public class CampaignEisEventPublisher {
                     campaign.getActualStartAt(),
                     campaign.getActualEndAt(),
                     creatives,
+                    UserEisDto.from(campaign.getOwner()),
                     campaign.getModerationComment(),
                     campaign.getPaymentConfirmationUrl(),
                     campaign.getPaymentId(),
@@ -180,6 +211,24 @@ public class CampaignEisEventPublisher {
 
         private static CreativeEisDto from(Creative creative) {
             return new CreativeEisDto(creative.getId(), creative.getName(), creative.getType().name());
+        }
+    }
+
+    private record UserEisDto(
+            Long id,
+            String username,
+            String role
+    ) {
+
+        private static UserEisDto from(UserAccount user) {
+            if (user == null) {
+                return null;
+            }
+            return new UserEisDto(
+                    user.getId(),
+                    user.getUsername(),
+                    user.getRole() == null ? null : user.getRole().name()
+            );
         }
     }
 }

@@ -1,0 +1,57 @@
+databaseChangeLog:
+  - changeSet:
+      id: 006-create-eis-outbox-events
+      author: lab1-app
+      changes:
+        - createTable:
+            tableName: eis_outbox_events
+            columns:
+              - column:
+                  name: id
+                  type: bigint
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: event_key
+                  type: varchar(255)
+                  constraints:
+                    nullable: false
+                    unique: true
+                    uniqueConstraintName: uk_eis_outbox_events_event_key
+              - column:
+                  name: event_type
+                  type: varchar(100)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: payload
+                  type: text
+                  constraints:
+                    nullable: false
+              - column:
+                  name: published_at
+                  type: timestamp
+              - column:
+                  name: created_at
+                  type: timestamp
+                  constraints:
+                    nullable: false
+        - createIndex:
+            indexName: idx_eis_outbox_events_unpublished
+            tableName: eis_outbox_events
+            columns:
+              - column:
+                  name: published_at
+              - column:
+                  name: id
+
+  - changeSet:
+      id: 006-add-unique-kafka-outbox-topic-event-key
+      author: lab1-app
+      changes:
+        - addUniqueConstraint:
+            tableName: kafka_outbox_events
+            columnNames: topic,event_key
+            constraintName: uk_kafka_outbox_events_topic_event_key

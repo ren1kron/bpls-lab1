@@ -4,7 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import ifmo.se.lab1app.client.domain.creative.Creative;
 import ifmo.se.lab1app.client.infra.CreativeRepository;
-import ifmo.se.lab1app.eis.CampaignEisEventPublisher;
+import ifmo.se.lab1app.eis.CampaignEisOutboxService;
 import ifmo.se.lab1app.shared.application.TransactionExecutor;
 import ifmo.se.lab1app.shared.domain.Campaign;
 import ifmo.se.lab1app.shared.domain.CampaignStatus;
@@ -38,7 +38,7 @@ public class CreativeUploadSagaHandler {
     private final TransactionExecutor transactions;
     private final ObjectMapper objectMapper;
     private final CreativeUploadKafkaProperties kafkaProperties;
-    private final CampaignEisEventPublisher eisEventPublisher;
+    private final CampaignEisOutboxService eisOutboxService;
 
     public CreativeUploadSagaHandler(
             CreativeUploadTaskRepository taskRepository,
@@ -48,7 +48,7 @@ public class CreativeUploadSagaHandler {
             TransactionExecutor transactions,
             ObjectMapper objectMapper,
             CreativeUploadKafkaProperties kafkaProperties,
-            CampaignEisEventPublisher eisEventPublisher
+            CampaignEisOutboxService eisOutboxService
     ) {
         this.taskRepository = taskRepository;
         this.campaignRepository = campaignRepository;
@@ -57,7 +57,7 @@ public class CreativeUploadSagaHandler {
         this.transactions = transactions;
         this.objectMapper = objectMapper;
         this.kafkaProperties = kafkaProperties;
-        this.eisEventPublisher = eisEventPublisher;
+        this.eisOutboxService = eisOutboxService;
     }
 
     public void handleRequestPayload(String payload) {
@@ -65,30 +65,36 @@ public class CreativeUploadSagaHandler {
         try {
             event = objectMapper.readValue(payload, CreativeUploadRequestEvent.class);
         } catch (JsonProcessingException exception) {
-            throw new IllegalArgumentException("Invalid creative upload request event payload", exception);
+            throw new MalformedCreativeUploadEventException("Invalid creative upload request event payload", exception);
         }
         processRequest(event);
     }
 
     public void processRequest(CreativeUploadRequestEvent event) {
         try {
+            validateRequest(event);
             transactions.write(() -> completeTask(event));
+        } catch (PermanentCreativeUploadFailureException exception) {
+            log.warn("Permanent creative upload failure taskId={}: {}", taskId(event), exception.getMessage());
+            markTaskFailed(taskId(event), exception.getMessage());
         } catch (RuntimeException exception) {
-            log.error("Failed to process creative upload taskId={}", event.taskId(), exception);
-            markTaskFailed(event.taskId(), exception.getMessage());
+            log.error("Retryable creative upload failure taskId={}", taskId(event), exception);
             throw exception;
         }
     }
 
     private void completeTask(CreativeUploadRequestEvent event) {
         CreativeUploadTask task = taskRepository.findByIdForUpdate(event.taskId())
-                .orElseThrow(() -> new IllegalStateException("Creative upload task not found: " + event.taskId()));
+                .orElseThrow(() -> permanent("Creative upload task not found: " + event.taskId()));
 
         if (task.getStatus() == CreativeUploadStatus.COMPLETED || task.getStatus() == CreativeUploadStatus.FAILED) {
             return;
         }
         if (!task.getCampaignId().equals(event.campaignId())) {
-            throw new IllegalStateException("Task campaign mismatch for taskId=" + event.taskId());
+            throw permanent("Task campaign mismatch for taskId=" + event.taskId());
+        }
+        if (!task.getUrl().equals(event.url()) || task.getType() != event.type()) {
+            throw permanent("Task payload mismatch for taskId=" + event.taskId());
         }
 
         Campaign campaign = campaignRepository.findByIdForUpdate(task.getCampaignId())
@@ -110,14 +116,25 @@ public class CreativeUploadSagaHandler {
         task.setCreativeId(creative.getId());
         task.setError(null);
         refreshCampaignStatusAfterTaskFinished(campaign);
-        outboxRepository.save(resultEvent(task));
-        eisEventPublisher.publish("CreativeAdded", statusBefore, campaign.getStatus(), campaign);
+        saveResultEventIfAbsent(task);
+        eisOutboxService.enqueue(
+                "creative-upload:" + task.getId() + ":creative-added",
+                "CreativeAdded",
+                statusBefore,
+                campaign.getStatus(),
+                campaign
+        );
     }
 
     private void markTaskFailed(String taskId, String error) {
+        if (taskId == null || taskId.isBlank()) {
+            return;
+        }
         transactions.write(() -> {
             CreativeUploadTask task = taskRepository.findByIdForUpdate(taskId).orElse(null);
-            if (task == null || task.getStatus() == CreativeUploadStatus.COMPLETED) {
+            if (task == null
+                    || task.getStatus() == CreativeUploadStatus.COMPLETED
+                    || task.getStatus() == CreativeUploadStatus.FAILED) {
                 return;
             }
 
@@ -125,8 +142,15 @@ public class CreativeUploadSagaHandler {
             task.setError(error);
             campaignRepository.findByIdForUpdate(task.getCampaignId())
                     .ifPresent(this::refreshCampaignStatusAfterTaskFinished);
-            outboxRepository.save(resultEvent(task));
+            saveResultEventIfAbsent(task);
         });
+    }
+
+    private void saveResultEventIfAbsent(CreativeUploadTask task) {
+        String topic = kafkaProperties.getUploadResultTopic();
+        if (!outboxRepository.existsByTopicAndEventKey(topic, task.getId())) {
+            outboxRepository.save(resultEvent(task));
+        }
     }
 
     private void refreshCampaignStatusAfterTaskFinished(Campaign campaign) {
@@ -159,6 +183,39 @@ public class CreativeUploadSagaHandler {
             );
         } catch (JsonProcessingException exception) {
             throw new IllegalStateException("Failed to serialize creative upload result event", exception);
+        }
+    }
+
+    private void validateRequest(CreativeUploadRequestEvent event) {
+        if (event == null) {
+            throw permanent("Creative upload request event is null");
+        }
+        if (event.taskId() == null || event.taskId().isBlank()) {
+            throw permanent("Creative upload request event taskId is blank");
+        }
+        if (event.campaignId() == null) {
+            throw permanent("Creative upload request event campaignId is null");
+        }
+        if (event.url() == null || event.url().isBlank()) {
+            throw permanent("Creative upload request event url is blank for taskId=" + event.taskId());
+        }
+        if (event.type() == null) {
+            throw permanent("Creative upload request event type is null for taskId=" + event.taskId());
+        }
+    }
+
+    private String taskId(CreativeUploadRequestEvent event) {
+        return event == null ? null : event.taskId();
+    }
+
+    private PermanentCreativeUploadFailureException permanent(String message) {
+        return new PermanentCreativeUploadFailureException(message);
+    }
+
+    private static class PermanentCreativeUploadFailureException extends RuntimeException {
+
+        private PermanentCreativeUploadFailureException(String message) {
+            super(message);
         }
     }
 }

@@ -10,6 +10,8 @@ import org.springframework.data.jpa.repository.Query;
 
 public interface KafkaOutboxEventRepository extends JpaRepository<KafkaOutboxEvent, Long> {
 
+    boolean existsByTopicAndEventKey(String topic, String eventKey);
+
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("select event from KafkaOutboxEvent event where event.publishedAt is null order by event.id asc")
     List<KafkaOutboxEvent> findUnpublishedForUpdate(Pageable pageable);

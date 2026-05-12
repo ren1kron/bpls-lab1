@@ -84,8 +84,16 @@ public class CampaignEisEventPublisher {
             return;
         }
         try {
-            String payload = objectMapper.writeValueAsString(toEvent(eventType, statusBefore, statusAfter, comment, campaign, operationUser));
-            sendWithJca(payload);
+            String payload = buildPayload(
+                    UUID.randomUUID().toString(),
+                    eventType,
+                    statusBefore,
+                    statusAfter,
+                    comment,
+                    campaign,
+                    operationUser
+            );
+            publishStoredPayload(payload);
             log.info("Published campaign event to EIS eventType={} campaignId={}", eventType, campaign.getId());
         } catch (Exception exception) {
             if (properties.failOnError()) {
@@ -95,7 +103,54 @@ public class CampaignEisEventPublisher {
         }
     }
 
+    public String buildPayload(
+            String eventId,
+            String eventType,
+            CampaignStatus statusBefore,
+            CampaignStatus statusAfter,
+            String comment,
+            Campaign campaign
+    ) {
+        return buildPayload(eventId, eventType, statusBefore, statusAfter, comment, campaign, null);
+    }
+
+    public String buildPayload(
+            String eventId,
+            String eventType,
+            CampaignStatus statusBefore,
+            CampaignStatus statusAfter,
+            String comment,
+            Campaign campaign,
+            UserAccount operationUser
+    ) {
+        try {
+            return objectMapper.writeValueAsString(toEvent(
+                    eventId,
+                    eventType,
+                    statusBefore,
+                    statusAfter,
+                    comment,
+                    campaign,
+                    operationUser
+            ));
+        } catch (Exception exception) {
+            throw new IllegalStateException("Failed to serialize campaign event for EIS", exception);
+        }
+    }
+
+    public void publishStoredPayload(String payload) {
+        if (!properties.enabled()) {
+            throw new IllegalStateException("EIS integration is disabled");
+        }
+        try {
+            sendWithJca(payload);
+        } catch (Exception exception) {
+            throw new IllegalStateException("Failed to publish campaign event to EIS", exception);
+        }
+    }
+
     private CampaignEisEvent toEvent(
+            String eventId,
             String eventType,
             CampaignStatus statusBefore,
             CampaignStatus statusAfter,
@@ -109,7 +164,7 @@ public class CampaignEisEventPublisher {
                         .map(CreativeEisDto::from)
                         .toList();
         return new CampaignEisEvent(
-                UUID.randomUUID().toString(),
+                eventId,
                 eventType,
                 statusBefore,
                 statusAfter,
@@ -165,17 +220,17 @@ public class CampaignEisEventPublisher {
             StartMode startMode,
             CampaignStatus status,
             BigDecimal budgetAmount,
-            LocalDateTime requestedStartAt,
+            String requestedStartAt,
             Integer durationDays,
-            LocalDateTime actualStartAt,
-            LocalDateTime actualEndAt,
+            String actualStartAt,
+            String actualEndAt,
             Collection<CreativeEisDto> creatives,
             UserEisDto user,
             String moderationComment,
             String paymentConfirmationUrl,
             String paymentId,
-            LocalDateTime createdAt,
-            LocalDateTime updatedAt
+            String createdAt,
+            String updatedAt
     ) {
 
         private static CampaignEisDto from(Campaign campaign, Collection<CreativeEisDto> creatives) {
@@ -188,18 +243,22 @@ public class CampaignEisEventPublisher {
                     campaign.getStartMode(),
                     campaign.getStatus(),
                     campaign.getBudgetAmount(),
-                    campaign.getRequestedStartAt(),
+                    format(campaign.getRequestedStartAt()),
                     campaign.getDurationDays(),
-                    campaign.getActualStartAt(),
-                    campaign.getActualEndAt(),
+                    format(campaign.getActualStartAt()),
+                    format(campaign.getActualEndAt()),
                     creatives,
                     UserEisDto.from(campaign.getOwner()),
                     campaign.getModerationComment(),
                     campaign.getPaymentConfirmationUrl(),
                     campaign.getPaymentId(),
-                    campaign.getCreatedAt(),
-                    campaign.getUpdatedAt()
+                    format(campaign.getCreatedAt()),
+                    format(campaign.getUpdatedAt())
             );
+        }
+
+        private static String format(LocalDateTime value) {
+            return value == null ? null : value.toString();
         }
     }
 

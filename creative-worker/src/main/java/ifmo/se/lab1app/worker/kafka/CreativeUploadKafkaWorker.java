@@ -93,7 +93,7 @@ public class CreativeUploadKafkaWorker implements SmartLifecycle {
                     record.partition(),
                     record.offset()
             );
-        } catch (IllegalArgumentException exception) {
+        } catch (MalformedCreativeUploadEventException exception) {
             log.error("Skipping malformed creative upload event at offset={}", record.offset(), exception);
             commitOffset(record, kafkaConsumer);
         } catch (Exception exception) {

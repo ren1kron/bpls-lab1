@@ -17,6 +17,7 @@ import ifmo.se.lab1app.shared.domain.CreativeUploadTask;
 import ifmo.se.lab1app.shared.domain.UserRole;
 import ifmo.se.lab1app.shared.infra.CampaignRepository;
 import ifmo.se.lab1app.shared.infra.CreativeUploadTaskRepository;
+import ifmo.se.lab1app.shared.infra.EisOutboxEventRepository;
 import ifmo.se.lab1app.shared.infra.KafkaOutboxEventRepository;
 import ifmo.se.lab1app.shared.kafka.dto.CreativeUploadRequestEvent;
 import java.util.UUID;
@@ -48,10 +49,14 @@ class CreativeUploadSagaHandlerIntegrationTest {
     private KafkaOutboxEventRepository outboxEventRepository;
 
     @Autowired
+    private EisOutboxEventRepository eisOutboxEventRepository;
+
+    @Autowired
     private UserAccountRepository userAccountRepository;
 
     @BeforeEach
     void cleanDatabase() {
+        eisOutboxEventRepository.deleteAll();
         outboxEventRepository.deleteAll();
         taskRepository.deleteAll();
         creativeRepository.deleteAll();
@@ -83,6 +88,15 @@ class CreativeUploadSagaHandlerIntegrationTest {
         assertThat(campaignRepository.findById(campaign.getId()).orElseThrow().getStatus())
                 .isEqualTo(CampaignStatus.CREATIVES_UPLOADED);
         assertThat(outboxEventRepository.count()).isEqualTo(1);
+        assertThat(eisOutboxEventRepository.count()).isEqualTo(1);
+        assertThat(eisOutboxEventRepository.findByEventKey("creative-upload:" + task.getId() + ":creative-added"))
+                .isPresent()
+                .get()
+                .satisfies(event -> {
+                    assertThat(event.getEventType()).isEqualTo("CreativeAdded");
+                    assertThat(event.getPayload()).contains("\"eventId\":\"creative-upload:" + task.getId() + ":creative-added\"");
+                    assertThat(event.getPublishedAt()).isNull();
+                });
     }
 
     @Test
@@ -102,19 +116,21 @@ class CreativeUploadSagaHandlerIntegrationTest {
         assertThat(creativeRepository.countByCampaignId(campaign.getId())).isEqualTo(1);
         assertThat(taskRepository.findById(task.getId()).orElseThrow().getStatus())
                 .isEqualTo(CreativeUploadStatus.COMPLETED);
+        assertThat(outboxEventRepository.count()).isEqualTo(1);
+        assertThat(eisOutboxEventRepository.count()).isEqualTo(1);
     }
 
     @Test
-    void shouldMarkTaskFailedWhenEventDoesNotMatchTaskCampaign() {
+    void shouldMarkTaskFailedAndReturnWhenEventDoesNotMatchTaskCampaign() {
         Campaign campaign = createCampaign();
         CreativeUploadTask task = createTask(campaign, "https://cdn.example.com/failure.png");
 
-        assertThatThrownBy(() -> sagaHandler.processRequest(new CreativeUploadRequestEvent(
+        sagaHandler.processRequest(new CreativeUploadRequestEvent(
                 task.getId(),
                 campaign.getId() + 100,
                 task.getUrl(),
                 task.getType()
-        ))).isInstanceOf(IllegalStateException.class);
+        ));
 
         CreativeUploadTask failedTask = taskRepository.findById(task.getId()).orElseThrow();
         assertThat(failedTask.getStatus()).isEqualTo(CreativeUploadStatus.FAILED);
@@ -123,6 +139,27 @@ class CreativeUploadSagaHandlerIntegrationTest {
         assertThat(campaignRepository.findById(campaign.getId()).orElseThrow().getStatus())
                 .isEqualTo(CampaignStatus.CONFIGURED);
         assertThat(outboxEventRepository.count()).isEqualTo(1);
+        assertThat(eisOutboxEventRepository.count()).isZero();
+    }
+
+    @Test
+    void shouldLeaveTaskRetryableWhenCampaignLookupFails() {
+        CreativeUploadTask task = createOrphanTask(999_999_999L, "https://cdn.example.com/retryable.png");
+
+        assertThatThrownBy(() -> sagaHandler.processRequest(new CreativeUploadRequestEvent(
+                task.getId(),
+                task.getCampaignId(),
+                task.getUrl(),
+                task.getType()
+        ))).isInstanceOf(IllegalStateException.class)
+                .hasMessageContaining("Campaign not found");
+
+        CreativeUploadTask retryableTask = taskRepository.findById(task.getId()).orElseThrow();
+        assertThat(retryableTask.getStatus()).isEqualTo(CreativeUploadStatus.PENDING);
+        assertThat(retryableTask.getError()).isNull();
+        assertThat(creativeRepository.countByCampaignId(task.getCampaignId())).isZero();
+        assertThat(outboxEventRepository.count()).isZero();
+        assertThat(eisOutboxEventRepository.count()).isZero();
     }
 
     private Campaign createCampaign() {
@@ -144,9 +181,13 @@ class CreativeUploadSagaHandlerIntegrationTest {
     }
 
     private CreativeUploadTask createTask(Campaign campaign, String url) {
+        return createOrphanTask(campaign.getId(), url);
+    }
+
+    private CreativeUploadTask createOrphanTask(Long campaignId, String url) {
         CreativeUploadTask task = new CreativeUploadTask();
         task.setId(UUID.randomUUID().toString());
-        task.setCampaignId(campaign.getId());
+        task.setCampaignId(campaignId);
         task.setUrl(url);
         task.setType(CreativeType.IMAGE);
         task.setStatus(CreativeUploadStatus.PENDING);

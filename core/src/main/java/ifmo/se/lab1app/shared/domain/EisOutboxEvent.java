@@ -16,23 +16,20 @@ import lombok.Setter;
 @Setter
 @Entity
 @Table(
-        name = "kafka_outbox_events",
-        uniqueConstraints = @UniqueConstraint(
-                name = "uk_kafka_outbox_events_topic_event_key",
-                columnNames = {"topic", "event_key"}
-        )
+        name = "eis_outbox_events",
+        uniqueConstraints = @UniqueConstraint(name = "uk_eis_outbox_events_event_key", columnNames = "event_key")
 )
-public class KafkaOutboxEvent {
+public class EisOutboxEvent {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false)
-    private String topic;
-
     @Column(name = "event_key", nullable = false)
     private String eventKey;
+
+    @Column(name = "event_type", nullable = false, length = 100)
+    private String eventType;
 
     @Column(nullable = false, columnDefinition = "text")
     private String payload;
@@ -43,10 +40,10 @@ public class KafkaOutboxEvent {
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
 
-    public static KafkaOutboxEvent unpublished(String topic, String eventKey, String payload) {
-        KafkaOutboxEvent event = new KafkaOutboxEvent();
-        event.setTopic(topic);
+    public static EisOutboxEvent unpublished(String eventKey, String eventType, String payload) {
+        EisOutboxEvent event = new EisOutboxEvent();
         event.setEventKey(eventKey);
+        event.setEventType(eventType);
         event.setPayload(payload);
         return event;
     }

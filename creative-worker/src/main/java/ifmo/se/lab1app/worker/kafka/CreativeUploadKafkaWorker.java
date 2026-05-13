@@ -1,5 +1,6 @@
 package ifmo.se.lab1app.worker.kafka;
 
+import ifmo.se.lab1app.exception.MalformedCreativeUploadEventException;
 import ifmo.se.lab1app.shared.kafka.CreativeUploadKafkaProperties;
 import java.time.Duration;
 import java.util.Collections;

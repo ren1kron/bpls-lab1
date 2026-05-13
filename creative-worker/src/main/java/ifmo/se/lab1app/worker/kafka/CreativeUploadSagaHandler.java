@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import ifmo.se.lab1app.client.domain.creative.Creative;
 import ifmo.se.lab1app.client.infra.CreativeRepository;
 import ifmo.se.lab1app.eis.CampaignEisOutboxService;
+import ifmo.se.lab1app.exception.MalformedCreativeUploadEventException;
 import ifmo.se.lab1app.shared.application.TransactionExecutor;
 import ifmo.se.lab1app.shared.domain.Campaign;
 import ifmo.se.lab1app.shared.domain.CampaignStatus;

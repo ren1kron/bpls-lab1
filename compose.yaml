@@ -1,17 +1,19 @@
 services:
-  api-app:
+  wildfly-app:
     build:
       context: .
       dockerfile: Dockerfile
-      args:
-        JAR_FILE: api-app/build/libs/*.jar
-    container_name: lab1-api-app
+    container_name: lab1-wildfly-app
     depends_on:
       postgres:
         condition: service_healthy
       creative-postgres:
         condition: service_healthy
       kafka-init:
+        condition: service_completed_successfully
+      camunda:
+        condition: service_started
+      camunda-deployer:
         condition: service_completed_successfully
     environment:
       DB_URL: jdbc:postgresql://postgres:5432/lab1
@@ -22,23 +24,30 @@ services:
       CREATIVE_DB_PASSWORD: lab1_creatives
       KAFKA_BOOTSTRAP_SERVERS: kafka:29092
       CREATIVE_UPLOAD_PRODUCER_CLIENT_ID: lab1-api-outbox
+      CAMUNDA_ENABLED: "true"
+      CAMUNDA_BASE_URL: http://camunda:8080/engine-rest
+      CAMUNDA_USERNAME: demo
+      CAMUNDA_PASSWORD: demo
+      CAMUNDA_WORKER_ID: lab1-api-worker
     ports:
-      - "127.0.0.1:26125:26125"
+      - "127.0.0.1:26125:8080"
     restart: unless-stopped
 
-  creative-worker:
+  wildfly-creative-worker:
     build:
       context: .
-      dockerfile: Dockerfile
-      args:
-        JAR_FILE: creative-worker/build/libs/*.jar
-    container_name: lab1-creative-worker
+      dockerfile: Dockerfile.worker
+    container_name: lab1-wildfly-creative-worker
     depends_on:
       postgres:
         condition: service_healthy
       creative-postgres:
         condition: service_healthy
       kafka-init:
+        condition: service_completed_successfully
+      camunda:
+        condition: service_started
+      camunda-deployer:
         condition: service_completed_successfully
     environment:
       DB_URL: jdbc:postgresql://postgres:5432/lab1
@@ -48,7 +57,54 @@ services:
       CREATIVE_DB_USERNAME: lab1_creatives
       CREATIVE_DB_PASSWORD: lab1_creatives
       KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      CAMUNDA_ENABLED: "true"
+      CAMUNDA_BASE_URL: http://camunda:8080/engine-rest
+      CAMUNDA_USERNAME: demo
+      CAMUNDA_PASSWORD: demo
+      CAMUNDA_WORKER_ID: lab1-creative-worker
     restart: unless-stopped
+
+  camunda:
+    image: camunda/camunda-bpm-platform:run-7.24.0
+    container_name: lab1-camunda
+    depends_on:
+      camunda-postgres:
+        condition: service_healthy
+    environment:
+      DB_DRIVER: org.postgresql.Driver
+      DB_URL: jdbc:postgresql://camunda-postgres:5432/camunda
+      DB_USERNAME: camunda
+      DB_PASSWORD: camunda
+      WAIT_FOR: camunda-postgres:5432
+      WAIT_FOR_TIMEOUT: 60
+    ports:
+      - "127.0.0.1:8080:8080"
+    restart: unless-stopped
+
+  camunda-deployer:
+    image: curlimages/curl:8.11.1
+    container_name: lab1-camunda-deployer
+    depends_on:
+      camunda:
+        condition: service_started
+    volumes:
+      - ./docs/aviasales-process.bpmn:/deployments/aviasales-process.bpmn:ro
+    command:
+      - sh
+      - -c
+      - |
+        set -e
+        until curl -fsS -u demo:demo http://camunda:8080/engine-rest/version >/dev/null; do
+          sleep 2
+        done
+        curl -fsS -u demo:demo \
+          -F deployment-name=aviasales-process \
+          -F deployment-source=docker-compose \
+          -F enable-duplicate-filtering=true \
+          -F deploy-changed-only=true \
+          -F data=@/deployments/aviasales-process.bpmn \
+          http://camunda:8080/engine-rest/deployment/create >/dev/null
+    restart: "no"
 
   postgres:
     image: postgres:16
@@ -82,6 +138,23 @@ services:
       - creative_postgres_data:/var/lib/postgresql/data
     healthcheck:
       test: [ "CMD-SHELL", "pg_isready -U lab1_creatives -d lab1_creatives" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  camunda-postgres:
+    image: postgres:16
+    container_name: lab1-camunda-postgres
+    environment:
+      POSTGRES_DB: camunda
+      POSTGRES_USER: camunda
+      POSTGRES_PASSWORD: camunda
+    ports:
+      - "6264:5432"
+    volumes:
+      - camunda_postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U camunda -d camunda" ]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -135,3 +208,4 @@ services:
 volumes:
   postgres_data:
   creative_postgres_data:
+  camunda_postgres_data:

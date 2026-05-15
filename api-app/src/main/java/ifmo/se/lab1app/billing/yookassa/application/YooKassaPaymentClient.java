@@ -2,18 +2,22 @@ package ifmo.se.lab1app.billing.yookassa.application;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import ifmo.se.lab1app.exception.ExternalServiceException;
 import ifmo.se.lab1app.shared.domain.Campaign;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
+import java.nio.charset.StandardCharsets;
+import java.time.Duration;
+import java.util.Base64;
 import java.util.UUID;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
-import org.springframework.web.client.RestClient;
-import org.springframework.web.client.RestClientException;
-import org.springframework.web.client.RestClientResponseException;
 
 @Slf4j
 @Component
@@ -22,9 +26,15 @@ public class YooKassaPaymentClient {
     private static final String IDEMPOTENCE_KEY_HEADER = "Idempotence-Key";
 
     private final YooKassaProperties properties;
+    private final HttpClient httpClient;
+    private final ObjectMapper objectMapper;
 
     public YooKassaPaymentClient(YooKassaProperties properties) {
         this.properties = properties;
+        this.httpClient = HttpClient.newBuilder()
+                .connectTimeout(Duration.ofSeconds(10))
+                .build();
+        this.objectMapper = new ObjectMapper();
     }
 
     public YooKassaPaymentResult createPayment(Campaign campaign) {
@@ -34,21 +44,35 @@ public class YooKassaPaymentClient {
         String idempotenceKey = UUID.randomUUID().toString();
 
         try {
-            response = RestClient.builder()
-                .baseUrl(properties.getApiUrl())
-                .defaultHeaders(headers -> headers.setBasicAuth(properties.getShopId(), properties.getSecretKey()))
-                .build()
-                .post()
-                .uri("/payments")
-                .header(IDEMPOTENCE_KEY_HEADER, idempotenceKey)
-                .contentType(MediaType.APPLICATION_JSON)
-                .body(buildRequest(campaign))
-                .retrieve()
-                .body(YooKassaCreatePaymentResponse.class);
-        } catch (RestClientResponseException exception) {
-            log.error("YooKassa returned {} for campaign {}", exception.getStatusCode(), campaign.getId(), exception);
-            throw new ExternalServiceException("YooKassa не создала счет: " + exception.getStatusCode().value());
-        } catch (RestClientException exception) {
+            HttpRequest request = HttpRequest.newBuilder()
+                    .uri(URI.create(trimTrailingSlash(properties.getApiUrl()) + "/payments"))
+                    .timeout(Duration.ofSeconds(30))
+                    .header("Authorization", basicAuthHeader())
+                    .header(IDEMPOTENCE_KEY_HEADER, idempotenceKey)
+                    .header("Content-Type", "application/json; charset=utf-8")
+                    .header("Accept", "application/json")
+                    .POST(HttpRequest.BodyPublishers.ofString(
+                            objectMapper.writeValueAsString(buildRequest(campaign)),
+                            StandardCharsets.UTF_8
+                    ))
+                    .build();
+            HttpResponse<String> httpResponse = httpClient.send(
+                    request,
+                    HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8)
+            );
+            if (httpResponse.statusCode() < 200 || httpResponse.statusCode() >= 300) {
+                log.error("YooKassa returned {} for campaign {} body={}",
+                        httpResponse.statusCode(), campaign.getId(), httpResponse.body());
+                throw new ExternalServiceException("YooKassa не создала счет: " + httpResponse.statusCode());
+            }
+            response = objectMapper.readValue(httpResponse.body(), YooKassaCreatePaymentResponse.class);
+        } catch (ExternalServiceException exception) {
+            throw exception;
+        } catch (InterruptedException exception) {
+            Thread.currentThread().interrupt();
+            log.error("YooKassa request failed for campaign {}", campaign.getId(), exception);
+            throw new ExternalServiceException("Не удалось обратиться к YooKassa");
+        } catch (Exception exception) {
             log.error("YooKassa request failed for campaign {}", campaign.getId(), exception);
             throw new ExternalServiceException("Не удалось обратиться к YooKassa");
         }
@@ -91,6 +115,15 @@ public class YooKassaPaymentClient {
         if (!StringUtils.hasText(properties.getReturnUrl())) {
             throw new ExternalServiceException("Не задан YOOKASSA_RETURN_URL");
         }
+    }
+
+    private String basicAuthHeader() {
+        String credentials = properties.getShopId() + ":" + properties.getSecretKey();
+        return "Basic " + Base64.getEncoder().encodeToString(credentials.getBytes(StandardCharsets.UTF_8));
+    }
+
+    private String trimTrailingSlash(String value) {
+        return value != null && value.endsWith("/") ? value.substring(0, value.length() - 1) : value;
     }
 
     private record YooKassaCreatePaymentRequest(

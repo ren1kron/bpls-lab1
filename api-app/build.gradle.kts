@@ -7,7 +7,6 @@ dependencies {
     implementation(project(":core"))
     implementation("org.springframework.boot:spring-boot-starter-security")
     implementation("org.springframework.boot:spring-boot-starter-web")
-    implementation("org.springframework.boot:spring-boot-starter-quartz")
     implementation("org.apache.kafka:kafka-clients:3.9.0")
     implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.5")
     providedRuntime("org.apache.tomcat.embed:tomcat-embed-core:11.0.15")

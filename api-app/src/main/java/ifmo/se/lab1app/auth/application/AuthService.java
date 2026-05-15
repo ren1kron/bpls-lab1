@@ -8,6 +8,7 @@ import ifmo.se.lab1app.auth.domain.AuthenticatedUser;
 import ifmo.se.lab1app.auth.domain.UserAccount;
 import ifmo.se.lab1app.auth.infra.UserAccountRepository;
 import ifmo.se.lab1app.auth.security.JwtTokenService;
+import ifmo.se.lab1app.camunda.CamundaIdentitySyncService;
 import ifmo.se.lab1app.exception.AlreadyExistsException;
 import ifmo.se.lab1app.shared.application.TransactionExecutor;
 import ifmo.se.lab1app.shared.domain.UserRole;
@@ -28,13 +29,17 @@ public class AuthService {
     private final PasswordEncoder passwordEncoder;
     private final TransactionExecutor transactions;
     private final UserSyncToOneCService userSyncToOneCService;
+    private final CamundaIdentitySyncService camundaIdentitySyncService;
 
     public LoginResponse login(LoginRequest request) {
         Authentication authToken = new UsernamePasswordAuthenticationToken(
                 request.username(), request.password());
         Authentication authenticated = authenticationManager.authenticate(authToken);
         AuthenticatedUser user = (AuthenticatedUser) authenticated.getPrincipal();
-        userAccountRepository.findByUsername(user.username()).ifPresent(userSyncToOneCService::syncUserBestEffort);
+        userAccountRepository.findByUsername(user.username()).ifPresent(userAccount -> {
+            userSyncToOneCService.syncUserBestEffort(userAccount);
+            camundaIdentitySyncService.syncUserBestEffort(userAccount, request.password());
+        });
 
         return new LoginResponse(
                 jwtTokenService.issueToken(user),
@@ -57,6 +62,7 @@ public class AuthService {
             return userAccountRepository.save(userAccount);
         });
         userSyncToOneCService.syncUserBestEffort(createdUser);
+        camundaIdentitySyncService.syncUserBestEffort(createdUser, request.password());
         return login(new LoginRequest(request.username(), request.password()));
     }
 

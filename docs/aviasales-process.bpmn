@@ -1,439 +1,399 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<bpmn:definitions xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" id="Definitions_Aviasales_Monetization_Lanes_RU" targetNamespace="http://example.com/aviasales/monetization" exporter="Camunda Modeler" exporterVersion="5.43.1">
-  <bpmn:message id="Message_BudgetExhausted" name="Бюджет исчерпан" />
-  <bpmn:message id="Message_PauseRequested" name="Запрошена пауза" />
-  <bpmn:collaboration id="Collaboration_Aviasales">
-    <bpmn:participant id="Participant_Aviasales" name="Aviasales — Админка монетизации" processRef="Process_CampaignLaunch" />
-    <bpmn:participant id="Participant_1d2ew2t" name="ЮКасса" processRef="Process_199wqr0" />
-    <bpmn:messageFlow id="Flow_0zj91l1" sourceRef="Activity_191l1ni" targetRef="Participant_1d2ew2t" />
-    <bpmn:messageFlow id="Flow_0zc9esg" sourceRef="Activity_02zbr4x" targetRef="Participant_1d2ew2t" />
-    <bpmn:messageFlow id="Flow_1u2hrju" sourceRef="Participant_1d2ew2t" targetRef="Activity_02zbr4x" />
-    <bpmn:messageFlow id="Flow_1pe3sum" sourceRef="Participant_1d2ew2t" targetRef="Activity_1biu9rw" />
-  </bpmn:collaboration>
-  <bpmn:process id="Process_CampaignLaunch" name="Запуск рекламной кампании" isExecutable="false">
-    <bpmn:laneSet id="LaneSet_Main">
-      <bpmn:lane id="Lane_Moderation" name="Модератор">
-        <bpmn:flowNodeRef>UserTask_ManualModeration</bpmn:flowNodeRef>
-        <bpmn:flowNodeRef>Gateway_ModerationApproved</bpmn:flowNodeRef>
-      </bpmn:lane>
-      <bpmn:lane id="Lane_System" name="Система (Ad Platform)">
-        <bpmn:flowNodeRef>Activity_02zbr4x</bpmn:flowNodeRef>
-        <bpmn:flowNodeRef>EventBasedGateway_WaitEndSignal</bpmn:flowNodeRef>
-        <bpmn:flowNodeRef>ServiceTask_ActivateCampaign</bpmn:flowNodeRef>
-        <bpmn:flowNodeRef>IntermediateTimer_WaitStart</bpmn:flowNodeRef>
-        <bpmn:flowNodeRef>Task_FreezeCampaign</bpmn:flowNodeRef>
-        <bpmn:flowNodeRef>Gateway_0t9euku</bpmn:flowNodeRef>
-        <bpmn:flowNodeRef>Activity_1biu9rw</bpmn:flowNodeRef>
-        <bpmn:flowNodeRef>IntermediateTimer_EndAt</bpmn:flowNodeRef>
-        <bpmn:flowNodeRef>ServiceTask_StopCampaign</bpmn:flowNodeRef>
-        <bpmn:flowNodeRef>EndEvent_CampaignFinished</bpmn:flowNodeRef>
-      </bpmn:lane>
-      <bpmn:lane id="Lane_Manager" name="Клиент">
-        <bpmn:flowNodeRef>UserTask_CreateDraft</bpmn:flowNodeRef>
-        <bpmn:flowNodeRef>StartEvent_CreateCampaign</bpmn:flowNodeRef>
-        <bpmn:flowNodeRef>UserTask_UploadCreatives</bpmn:flowNodeRef>
-        <bpmn:flowNodeRef>UserTask_SubmitForCheck</bpmn:flowNodeRef>
-        <bpmn:flowNodeRef>UserTask_FixAfterRejection</bpmn:flowNodeRef>
-        <bpmn:flowNodeRef>Activity_191l1ni</bpmn:flowNodeRef>
-        <bpmn:flowNodeRef>UserTask_DecideResumeOrStop</bpmn:flowNodeRef>
-        <bpmn:flowNodeRef>Gateway_1szdbtx</bpmn:flowNodeRef>
-        <bpmn:flowNodeRef>Activity_17kbayu</bpmn:flowNodeRef>
-        <bpmn:flowNodeRef>UserTask_ConfigureCampaign</bpmn:flowNodeRef>
-        <bpmn:flowNodeRef>IntermediateMessage_PauseRequested</bpmn:flowNodeRef>
-        <bpmn:flowNodeRef>Activity_0q7pyks</bpmn:flowNodeRef>
-      </bpmn:lane>
-    </bpmn:laneSet>
-    <bpmn:userTask id="UserTask_CreateDraft" name="Создать черновик кампании">
-      <bpmn:outgoing>Flow_05</bpmn:outgoing>
-    </bpmn:userTask>
-    <bpmn:startEvent id="StartEvent_CreateCampaign" name="Старт" />
-    <bpmn:userTask id="UserTask_UploadCreatives" name="Загрузить креативы" />
-    <bpmn:userTask id="UserTask_SubmitForCheck" name="Отправить на проверку">
-      <bpmn:outgoing>Flow_0gpfg6c</bpmn:outgoing>
-    </bpmn:userTask>
-    <bpmn:userTask id="UserTask_ManualModeration" name="Ручная модерация">
-      <bpmn:incoming>Flow_0gpfg6c</bpmn:incoming>
-    </bpmn:userTask>
-    <bpmn:exclusiveGateway id="Gateway_ModerationApproved" name="Одобрено?" />
-    <bpmn:userTask id="UserTask_FixAfterRejection" name="Доработать по замечаниям модератора" />
-    <bpmn:userTask id="Activity_191l1ni" name="Оплатить">
-      <bpmn:incoming>Flow_0u8941y</bpmn:incoming>
-      <bpmn:outgoing>Flow_1vai799</bpmn:outgoing>
-    </bpmn:userTask>
-    <bpmn:serviceTask id="Activity_02zbr4x" name="Сформировать счёт">
-      <bpmn:incoming>Flow_10_OK</bpmn:incoming>
-      <bpmn:incoming>Flow_1i7cs46</bpmn:incoming>
-      <bpmn:outgoing>Flow_0u8941y</bpmn:outgoing>
+<bpmn:definitions xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                  xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL"
+                  xmlns:camunda="http://camunda.org/schema/1.0/bpmn"
+                  id="Definitions_Aviasales_Camunda"
+                  targetNamespace="http://example.com/aviasales/monetization"
+                  exporter="Camunda Modeler"
+                  exporterVersion="5.43.1">
+
+  <bpmn:message id="Message_CreativeUploadFinished" name="CreativeUploadFinished" />
+  <bpmn:message id="Message_PaymentSucceeded" name="PaymentSucceeded" />
+  <bpmn:message id="Message_PaymentCanceled" name="PaymentCanceled" />
+  <bpmn:message id="Message_PauseRequested" name="PauseRequested" />
+
+  <bpmn:process id="aviasales-campaign-launch" name="Запуск рекламной кампании" isExecutable="true"
+                camunda:historyTimeToLive="P180D">
+    <bpmn:startEvent id="StartEvent_CreateCampaign" name="Создать кампанию" camunda:initiator="ownerUsername">
+      <bpmn:extensionElements>
+        <camunda:formData>
+          <camunda:formField id="ownerUsername" label="Владелец кампании" type="string" />
+          <camunda:formField id="name" label="Название" type="string">
+            <camunda:validation>
+              <camunda:constraint name="required" />
+            </camunda:validation>
+          </camunda:formField>
+          <camunda:formField id="objective" label="Цель" type="enum">
+            <camunda:value id="TRAFFIC" name="TRAFFIC" />
+            <camunda:value id="APP_INSTALL" name="APP_INSTALL" />
+            <camunda:value id="LEAD_GENERATION" name="LEAD_GENERATION" />
+            <camunda:value id="AWARENESS" name="AWARENESS" />
+            <camunda:value id="RETARGETING" name="RETARGETING" />
+          </camunda:formField>
+          <camunda:formField id="campaignType" label="Тип кампании" type="enum">
+            <camunda:value id="DISPLAY" name="DISPLAY" />
+            <camunda:value id="NATIVE" name="NATIVE" />
+            <camunda:value id="PUSH" name="PUSH" />
+            <camunda:value id="EMAIL" name="EMAIL" />
+            <camunda:value id="SPONSORED_LISTING" name="SPONSORED_LISTING" />
+          </camunda:formField>
+          <camunda:formField id="url" label="URL" type="string">
+            <camunda:validation>
+              <camunda:constraint name="required" />
+            </camunda:validation>
+          </camunda:formField>
+          <camunda:formField id="startMode" label="Режим запуска" type="enum">
+            <camunda:value id="MANUAL_START" name="MANUAL_START" />
+            <camunda:value id="AUTO_START_WHEN_APPROVED" name="AUTO_START_WHEN_APPROVED" />
+          </camunda:formField>
+        </camunda:formData>
+      </bpmn:extensionElements>
+      <bpmn:outgoing>Flow_Start_CreateDraft</bpmn:outgoing>
+    </bpmn:startEvent>
+
+    <bpmn:serviceTask id="ServiceTask_CreateDraft" name="Создать черновик"
+                      camunda:type="external" camunda:topic="campaign-create-draft">
+      <bpmn:incoming>Flow_Start_CreateDraft</bpmn:incoming>
+      <bpmn:outgoing>Flow_Draft_Configure</bpmn:outgoing>
     </bpmn:serviceTask>
-    <bpmn:eventBasedGateway id="EventBasedGateway_WaitEndSignal" name="Ожидание условия завершения">
-      <bpmn:incoming>Flow_0ugea3g</bpmn:incoming>
-      <bpmn:outgoing>Flow_19_PAUSE</bpmn:outgoing>
+
+    <bpmn:userTask id="UserTask_ConfigureCampaign" name="Настроить кампанию"
+                   camunda:candidateUsers="${ownerUsername}">
+      <bpmn:extensionElements>
+        <camunda:formData>
+          <camunda:formField id="budgetAmount" label="Бюджет" type="string">
+            <camunda:validation>
+              <camunda:constraint name="required" />
+            </camunda:validation>
+          </camunda:formField>
+          <camunda:formField id="requestedStartAt" label="Дата старта ISO-8601" type="string">
+            <camunda:validation>
+              <camunda:constraint name="required" />
+            </camunda:validation>
+          </camunda:formField>
+          <camunda:formField id="durationDays" label="Длительность в днях" type="long">
+            <camunda:validation>
+              <camunda:constraint name="required" />
+            </camunda:validation>
+          </camunda:formField>
+        </camunda:formData>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_Draft_Configure</bpmn:incoming>
+      <bpmn:outgoing>Flow_Configure_Service</bpmn:outgoing>
+    </bpmn:userTask>
+
+    <bpmn:serviceTask id="ServiceTask_ConfigureCampaign" name="Сохранить настройки"
+                      camunda:type="external" camunda:topic="campaign-configure">
+      <bpmn:incoming>Flow_Configure_Service</bpmn:incoming>
+      <bpmn:outgoing>Flow_Configured_Upload</bpmn:outgoing>
+    </bpmn:serviceTask>
+
+    <bpmn:userTask id="UserTask_UploadCreatives" name="Загрузить креатив"
+                   camunda:candidateUsers="${ownerUsername}">
+      <bpmn:extensionElements>
+        <camunda:formData>
+          <camunda:formField id="creativeUrl" label="URL креатива" type="string">
+            <camunda:validation>
+              <camunda:constraint name="required" />
+            </camunda:validation>
+          </camunda:formField>
+          <camunda:formField id="creativeType" label="Тип креатива" type="enum">
+            <camunda:value id="IMAGE" name="IMAGE" />
+            <camunda:value id="VIDEO" name="VIDEO" />
+            <camunda:value id="HTML5" name="HTML5" />
+          </camunda:formField>
+          <camunda:formField id="uploadMore" label="Загрузить еще после обработки" type="boolean" />
+        </camunda:formData>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_Configured_Upload</bpmn:incoming>
+      <bpmn:incoming>Flow_UploadMore_Yes</bpmn:incoming>
+      <bpmn:incoming>Flow_UploadFailed_Retry</bpmn:incoming>
+      <bpmn:incoming>Flow_Fix_UploadAgain</bpmn:incoming>
+      <bpmn:outgoing>Flow_Upload_Service</bpmn:outgoing>
+    </bpmn:userTask>
+
+    <bpmn:serviceTask id="ServiceTask_ScheduleCreativeUpload" name="Поставить загрузку креатива в Kafka"
+                      camunda:type="external" camunda:topic="creative-schedule-upload">
+      <bpmn:incoming>Flow_Upload_Service</bpmn:incoming>
+      <bpmn:outgoing>Flow_Upload_WaitResult</bpmn:outgoing>
+    </bpmn:serviceTask>
+
+    <bpmn:intermediateCatchEvent id="IntermediateMessage_CreativeUploadFinished" name="Креатив обработан">
+      <bpmn:incoming>Flow_Upload_WaitResult</bpmn:incoming>
+      <bpmn:outgoing>Flow_Upload_ResultGateway</bpmn:outgoing>
+      <bpmn:messageEventDefinition messageRef="Message_CreativeUploadFinished" />
+    </bpmn:intermediateCatchEvent>
+
+    <bpmn:exclusiveGateway id="Gateway_CreativeUploadResult" name="Загрузка успешна?" default="Flow_UploadCompleted">
+      <bpmn:incoming>Flow_Upload_ResultGateway</bpmn:incoming>
+      <bpmn:outgoing>Flow_UploadFailed_Retry</bpmn:outgoing>
+      <bpmn:outgoing>Flow_UploadCompleted</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+
+    <bpmn:exclusiveGateway id="Gateway_UploadMore" name="Еще креатив?" default="Flow_UploadMore_No">
+      <bpmn:incoming>Flow_UploadCompleted</bpmn:incoming>
+      <bpmn:outgoing>Flow_UploadMore_Yes</bpmn:outgoing>
+      <bpmn:outgoing>Flow_UploadMore_No</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+
+    <bpmn:userTask id="UserTask_SubmitForCheck" name="Отправить на проверку"
+                   camunda:candidateUsers="${ownerUsername}">
+      <bpmn:extensionElements>
+        <camunda:formData>
+          <camunda:formField id="operationUsername" label="Пользователь" type="string" />
+        </camunda:formData>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_UploadMore_No</bpmn:incoming>
+      <bpmn:outgoing>Flow_Submit_Service</bpmn:outgoing>
+    </bpmn:userTask>
+
+    <bpmn:serviceTask id="ServiceTask_SubmitForModeration" name="Перевести в модерацию"
+                      camunda:type="external" camunda:topic="campaign-submit">
+      <bpmn:incoming>Flow_Submit_Service</bpmn:incoming>
+      <bpmn:outgoing>Flow_Submit_Moderation</bpmn:outgoing>
+    </bpmn:serviceTask>
+
+    <bpmn:userTask id="UserTask_ManualModeration" name="Ручная модерация"
+                   camunda:candidateGroups="COMPANYMODERATOR">
+      <bpmn:extensionElements>
+        <camunda:formData>
+          <camunda:formField id="moderatorUsername" label="Модератор" type="string" />
+          <camunda:formField id="moderationApproved" label="Одобрено" type="boolean" />
+          <camunda:formField id="moderationComment" label="Комментарий" type="string" />
+        </camunda:formData>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_Submit_Moderation</bpmn:incoming>
+      <bpmn:outgoing>Flow_Moderation_Service</bpmn:outgoing>
+    </bpmn:userTask>
+
+    <bpmn:serviceTask id="ServiceTask_ModerationDecision" name="Обработать решение модерации"
+                      camunda:type="external" camunda:topic="moderation-decision">
+      <bpmn:incoming>Flow_Moderation_Service</bpmn:incoming>
+      <bpmn:outgoing>Flow_Moderation_Gateway</bpmn:outgoing>
+    </bpmn:serviceTask>
+
+    <bpmn:exclusiveGateway id="Gateway_ModerationApproved" name="Одобрено?" default="Flow_Moderation_Rejected">
+      <bpmn:incoming>Flow_Moderation_Gateway</bpmn:incoming>
+      <bpmn:outgoing>Flow_Moderation_Approved</bpmn:outgoing>
+      <bpmn:outgoing>Flow_Moderation_Rejected</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+
+    <bpmn:userTask id="UserTask_FixAfterRejection" name="Доработать кампанию"
+                   camunda:candidateUsers="${ownerUsername}">
+      <bpmn:extensionElements>
+        <camunda:formData>
+          <camunda:formField id="name" label="Название" type="string" />
+          <camunda:formField id="url" label="URL" type="string" />
+          <camunda:formField id="budgetAmount" label="Бюджет" type="string" />
+          <camunda:formField id="requestedStartAt" label="Дата старта ISO-8601" type="string" />
+          <camunda:formField id="durationDays" label="Длительность в днях" type="long" />
+        </camunda:formData>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_Moderation_Rejected</bpmn:incoming>
+      <bpmn:outgoing>Flow_Fix_Service</bpmn:outgoing>
+    </bpmn:userTask>
+
+    <bpmn:serviceTask id="ServiceTask_ReconfigureAfterRejection" name="Сохранить доработку"
+                      camunda:type="external" camunda:topic="campaign-reconfigure">
+      <bpmn:incoming>Flow_Fix_Service</bpmn:incoming>
+      <bpmn:outgoing>Flow_Fix_UploadAgain</bpmn:outgoing>
+    </bpmn:serviceTask>
+
+    <bpmn:userTask id="UserTask_Pay" name="Оплатить счет"
+                   camunda:candidateUsers="${ownerUsername}">
+      <bpmn:extensionElements>
+        <camunda:formData>
+          <camunda:formField id="paymentConfirmationUrl" label="Ссылка на оплату" type="string" />
+          <camunda:formField id="paymentAttempted" label="Оплата выполнена во внешней системе" type="boolean" />
+        </camunda:formData>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_Moderation_Approved</bpmn:incoming>
+      <bpmn:incoming>Flow_Retry_PayAgain</bpmn:incoming>
+      <bpmn:outgoing>Flow_Pay_WaitResult</bpmn:outgoing>
+    </bpmn:userTask>
+
+    <bpmn:eventBasedGateway id="EventBasedGateway_PaymentResult" name="Ожидание оплаты">
+      <bpmn:incoming>Flow_Pay_WaitResult</bpmn:incoming>
+      <bpmn:outgoing>Flow_Payment_Succeeded</bpmn:outgoing>
+      <bpmn:outgoing>Flow_Payment_Canceled</bpmn:outgoing>
     </bpmn:eventBasedGateway>
-    <bpmn:serviceTask id="ServiceTask_ActivateCampaign" name="Активировать кампанию (публикация)" />
-    <bpmn:intermediateCatchEvent id="IntermediateTimer_WaitStart" name="Ожидание времени старта (startAt)">
-      <bpmn:incoming>Flow_1xcpjpr</bpmn:incoming>
+
+    <bpmn:intermediateCatchEvent id="IntermediateMessage_PaymentSucceeded" name="Оплата получена">
+      <bpmn:incoming>Flow_Payment_Succeeded</bpmn:incoming>
+      <bpmn:outgoing>Flow_PaymentSucceeded_Service</bpmn:outgoing>
+      <bpmn:messageEventDefinition messageRef="Message_PaymentSucceeded" />
+    </bpmn:intermediateCatchEvent>
+
+    <bpmn:intermediateCatchEvent id="IntermediateMessage_PaymentCanceled" name="Оплата отменена">
+      <bpmn:incoming>Flow_Payment_Canceled</bpmn:incoming>
+      <bpmn:outgoing>Flow_PaymentCanceled_Service</bpmn:outgoing>
+      <bpmn:messageEventDefinition messageRef="Message_PaymentCanceled" />
+    </bpmn:intermediateCatchEvent>
+
+    <bpmn:serviceTask id="ServiceTask_PaymentSucceeded" name="Зафиксировать оплату"
+                      camunda:type="external" camunda:topic="payment-succeeded">
+      <bpmn:incoming>Flow_PaymentSucceeded_Service</bpmn:incoming>
+      <bpmn:outgoing>Flow_Wait_Start</bpmn:outgoing>
+    </bpmn:serviceTask>
+
+    <bpmn:intermediateCatchEvent id="IntermediateTimer_WaitStart" name="Ожидание времени старта">
+      <bpmn:incoming>Flow_Wait_Start</bpmn:incoming>
+      <bpmn:outgoing>Flow_Start_Activate</bpmn:outgoing>
       <bpmn:timerEventDefinition>
         <bpmn:timeDate xsi:type="bpmn:tFormalExpression">${startAt}</bpmn:timeDate>
       </bpmn:timerEventDefinition>
     </bpmn:intermediateCatchEvent>
-    <bpmn:userTask id="UserTask_DecideResumeOrStop" name="Решить: запустить или завершить">
-      <bpmn:incoming>Flow_22_PAUSE</bpmn:incoming>
-      <bpmn:outgoing>Flow_1gl0csn</bpmn:outgoing>
-      <bpmn:outgoing>Flow_0ugea3g</bpmn:outgoing>
-    </bpmn:userTask>
-    <bpmn:serviceTask id="Task_FreezeCampaign" name="Заморозить кампанию (нет оплаты)">
-      <bpmn:incoming>Flow_0ojquqe</bpmn:incoming>
-      <bpmn:outgoing>Flow_0mqgsz6</bpmn:outgoing>
+
+    <bpmn:serviceTask id="ServiceTask_ActivateCampaign" name="Активировать кампанию"
+                      camunda:type="external" camunda:topic="campaign-activate">
+      <bpmn:incoming>Flow_Start_Activate</bpmn:incoming>
+      <bpmn:outgoing>Flow_Active_Wait</bpmn:outgoing>
     </bpmn:serviceTask>
-    <bpmn:exclusiveGateway id="Gateway_1szdbtx" name="Отменить кампанию?">
-      <bpmn:incoming>Flow_126oxq5</bpmn:incoming>
-      <bpmn:outgoing>Flow_0kgu25i</bpmn:outgoing>
-      <bpmn:outgoing>Flow_1i7cs46</bpmn:outgoing>
-    </bpmn:exclusiveGateway>
-    <bpmn:userTask id="Activity_17kbayu" name="Повторить попытку оплаты или отменить?">
-      <bpmn:incoming>Flow_0mqgsz6</bpmn:incoming>
-      <bpmn:outgoing>Flow_126oxq5</bpmn:outgoing>
-    </bpmn:userTask>
-    <bpmn:sequenceFlow id="Flow_01" sourceRef="StartEvent_CreateCampaign" targetRef="UserTask_CreateDraft" />
-    <bpmn:sequenceFlow id="Flow_05" sourceRef="UserTask_CreateDraft" targetRef="UserTask_ConfigureCampaign" />
-    <bpmn:sequenceFlow id="Flow_03" sourceRef="UserTask_ConfigureCampaign" targetRef="UserTask_UploadCreatives" />
-    <bpmn:sequenceFlow id="Flow_04" sourceRef="UserTask_UploadCreatives" targetRef="UserTask_SubmitForCheck" />
-    <bpmn:sequenceFlow id="Flow_11_RETRY" sourceRef="UserTask_FixAfterRejection" targetRef="UserTask_SubmitForCheck" />
-    <bpmn:sequenceFlow id="Flow_0gpfg6c" sourceRef="UserTask_SubmitForCheck" targetRef="UserTask_ManualModeration" />
-    <bpmn:sequenceFlow id="Flow_09" sourceRef="UserTask_ManualModeration" targetRef="Gateway_ModerationApproved" />
-    <bpmn:sequenceFlow id="Flow_10_OK" sourceRef="Gateway_ModerationApproved" targetRef="Activity_02zbr4x">
-      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${moderationApproved == true}</bpmn:conditionExpression>
-    </bpmn:sequenceFlow>
-    <bpmn:sequenceFlow id="Flow_10_REJECT" sourceRef="Gateway_ModerationApproved" targetRef="UserTask_FixAfterRejection">
-      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${moderationApproved == false}</bpmn:conditionExpression>
-    </bpmn:sequenceFlow>
-    <bpmn:sequenceFlow id="Flow_0u8941y" sourceRef="Activity_02zbr4x" targetRef="Activity_191l1ni" />
-    <bpmn:sequenceFlow id="Flow_1i7cs46" sourceRef="Gateway_1szdbtx" targetRef="Activity_02zbr4x" />
-    <bpmn:sequenceFlow id="Flow_16" sourceRef="ServiceTask_ActivateCampaign" targetRef="EventBasedGateway_WaitEndSignal" />
-    <bpmn:sequenceFlow id="Flow_17_TIMER" sourceRef="EventBasedGateway_WaitEndSignal" targetRef="IntermediateTimer_EndAt" />
-    <bpmn:sequenceFlow id="Flow_20_TIMER_STOP" sourceRef="IntermediateTimer_EndAt" targetRef="ServiceTask_StopCampaign" />
-    <bpmn:sequenceFlow id="Flow_28_END" sourceRef="ServiceTask_StopCampaign" targetRef="EndEvent_CampaignFinished" />
-    <bpmn:sequenceFlow id="Flow_0kgu25i" sourceRef="Gateway_1szdbtx" targetRef="EndEvent_CampaignFinished" />
-    <bpmn:sequenceFlow id="Flow_15" sourceRef="IntermediateTimer_WaitStart" targetRef="ServiceTask_ActivateCampaign" />
-    <bpmn:sequenceFlow id="Flow_1xcpjpr" sourceRef="Gateway_0t9euku" targetRef="IntermediateTimer_WaitStart" />
-    <bpmn:sequenceFlow id="Flow_0ojquqe" sourceRef="Gateway_0t9euku" targetRef="Task_FreezeCampaign" />
-    <bpmn:sequenceFlow id="Flow_0mqgsz6" sourceRef="Task_FreezeCampaign" targetRef="Activity_17kbayu" />
-    <bpmn:sequenceFlow id="Flow_126oxq5" sourceRef="Activity_17kbayu" targetRef="Gateway_1szdbtx" />
-    <bpmn:userTask id="UserTask_ConfigureCampaign" name="Настроить кампанию (плейсменты/таргетинг/расписание/бюджет)">
-      <bpmn:incoming>Flow_05</bpmn:incoming>
-    </bpmn:userTask>
-    <bpmn:exclusiveGateway id="Gateway_0t9euku" name="Оплачено?">
-      <bpmn:incoming>Flow_1fjbp9c</bpmn:incoming>
-      <bpmn:outgoing>Flow_1xcpjpr</bpmn:outgoing>
-      <bpmn:outgoing>Flow_0ojquqe</bpmn:outgoing>
-    </bpmn:exclusiveGateway>
-    <bpmn:task id="Activity_1biu9rw" name="Получить статус оплаты">
-      <bpmn:incoming>Flow_1vai799</bpmn:incoming>
-      <bpmn:outgoing>Flow_1fjbp9c</bpmn:outgoing>
-    </bpmn:task>
-    <bpmn:sequenceFlow id="Flow_1fjbp9c" sourceRef="Activity_1biu9rw" targetRef="Gateway_0t9euku" />
-    <bpmn:sequenceFlow id="Flow_1vai799" sourceRef="Activity_191l1ni" targetRef="Activity_1biu9rw" />
-    <bpmn:intermediateCatchEvent id="IntermediateTimer_EndAt" name="Достигнуто endAt">
+
+    <bpmn:eventBasedGateway id="EventBasedGateway_ActiveWait" name="Ожидание завершения или паузы">
+      <bpmn:incoming>Flow_Active_Wait</bpmn:incoming>
+      <bpmn:incoming>Flow_Resume_ActiveWait</bpmn:incoming>
+      <bpmn:outgoing>Flow_End_Timer</bpmn:outgoing>
+      <bpmn:outgoing>Flow_Pause_Message</bpmn:outgoing>
+    </bpmn:eventBasedGateway>
+
+    <bpmn:intermediateCatchEvent id="IntermediateTimer_EndAt" name="Достигнуто время окончания">
+      <bpmn:incoming>Flow_End_Timer</bpmn:incoming>
+      <bpmn:outgoing>Flow_End_Stop</bpmn:outgoing>
       <bpmn:timerEventDefinition>
         <bpmn:timeDate xsi:type="bpmn:tFormalExpression">${endAt}</bpmn:timeDate>
       </bpmn:timerEventDefinition>
     </bpmn:intermediateCatchEvent>
-    <bpmn:serviceTask id="ServiceTask_StopCampaign" name="Остановить кампанию">
-      <bpmn:incoming>Flow_1gl0csn</bpmn:incoming>
-    </bpmn:serviceTask>
-    <bpmn:sequenceFlow id="Flow_22_PAUSE" sourceRef="Activity_0q7pyks" targetRef="UserTask_DecideResumeOrStop" />
-    <bpmn:sequenceFlow id="Flow_19_PAUSE" sourceRef="EventBasedGateway_WaitEndSignal" targetRef="IntermediateMessage_PauseRequested" />
-    <bpmn:endEvent id="EndEvent_CampaignFinished" name="Завершение">
-      <bpmn:incoming>Flow_0kgu25i</bpmn:incoming>
-    </bpmn:endEvent>
-    <bpmn:sequenceFlow id="Flow_0wc4wcz" sourceRef="IntermediateMessage_PauseRequested" targetRef="Activity_0q7pyks" />
+
     <bpmn:intermediateCatchEvent id="IntermediateMessage_PauseRequested" name="Запрошена пауза">
-      <bpmn:incoming>Flow_19_PAUSE</bpmn:incoming>
-      <bpmn:outgoing>Flow_0wc4wcz</bpmn:outgoing>
+      <bpmn:incoming>Flow_Pause_Message</bpmn:incoming>
+      <bpmn:outgoing>Flow_Pause_Freeze</bpmn:outgoing>
       <bpmn:messageEventDefinition messageRef="Message_PauseRequested" />
     </bpmn:intermediateCatchEvent>
-    <bpmn:userTask id="Activity_0q7pyks" name="Запросить паузу">
-      <bpmn:incoming>Flow_0wc4wcz</bpmn:incoming>
-      <bpmn:outgoing>Flow_22_PAUSE</bpmn:outgoing>
+
+    <bpmn:serviceTask id="ServiceTask_FreezeActiveCampaign" name="Заморозить активную кампанию"
+                      camunda:type="external" camunda:topic="campaign-freeze">
+      <bpmn:incoming>Flow_Pause_Freeze</bpmn:incoming>
+      <bpmn:outgoing>Flow_Freeze_Decide</bpmn:outgoing>
+    </bpmn:serviceTask>
+
+    <bpmn:userTask id="UserTask_DecideResumeOrStop" name="Возобновить или завершить"
+                   camunda:candidateUsers="${ownerUsername}">
+      <bpmn:extensionElements>
+        <camunda:formData>
+          <camunda:formField id="operationUsername" label="Пользователь" type="string" />
+          <camunda:formField id="proceed" label="Возобновить кампанию" type="boolean" />
+        </camunda:formData>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_Freeze_Decide</bpmn:incoming>
+      <bpmn:outgoing>Flow_Decide_ResumeGateway</bpmn:outgoing>
     </bpmn:userTask>
-    <bpmn:sequenceFlow id="Flow_1gl0csn" sourceRef="UserTask_DecideResumeOrStop" targetRef="ServiceTask_StopCampaign" />
-    <bpmn:sequenceFlow id="Flow_0ugea3g" sourceRef="UserTask_DecideResumeOrStop" targetRef="EventBasedGateway_WaitEndSignal" />
+
+    <bpmn:exclusiveGateway id="Gateway_ResumeOrStop" name="Возобновить?" default="Flow_Decide_Stop">
+      <bpmn:incoming>Flow_Decide_ResumeGateway</bpmn:incoming>
+      <bpmn:outgoing>Flow_Decide_Resume</bpmn:outgoing>
+      <bpmn:outgoing>Flow_Decide_Stop</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+
+    <bpmn:serviceTask id="ServiceTask_ResumeCampaign" name="Возобновить кампанию"
+                      camunda:type="external" camunda:topic="campaign-resume">
+      <bpmn:incoming>Flow_Decide_Resume</bpmn:incoming>
+      <bpmn:outgoing>Flow_Resume_ActiveWait</bpmn:outgoing>
+    </bpmn:serviceTask>
+
+    <bpmn:serviceTask id="ServiceTask_PaymentCanceled" name="Заморозить из-за отмены оплаты"
+                      camunda:type="external" camunda:topic="payment-canceled">
+      <bpmn:incoming>Flow_PaymentCanceled_Service</bpmn:incoming>
+      <bpmn:outgoing>Flow_Canceled_RetryTask</bpmn:outgoing>
+    </bpmn:serviceTask>
+
+    <bpmn:userTask id="UserTask_RetryPaymentOrCancel" name="Повторить оплату или отменить"
+                   camunda:candidateUsers="${ownerUsername}">
+      <bpmn:extensionElements>
+        <camunda:formData>
+          <camunda:formField id="operationUsername" label="Пользователь" type="string" />
+          <camunda:formField id="retryPayment" label="Повторить оплату" type="boolean" />
+        </camunda:formData>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_Canceled_RetryTask</bpmn:incoming>
+      <bpmn:outgoing>Flow_Retry_Gateway</bpmn:outgoing>
+    </bpmn:userTask>
+
+    <bpmn:exclusiveGateway id="Gateway_RetryPayment" name="Повторить?" default="Flow_Retry_Cancel">
+      <bpmn:incoming>Flow_Retry_Gateway</bpmn:incoming>
+      <bpmn:outgoing>Flow_Retry_Invoice</bpmn:outgoing>
+      <bpmn:outgoing>Flow_Retry_Cancel</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+
+    <bpmn:serviceTask id="ServiceTask_RetryPaymentInvoice" name="Сформировать новый счет"
+                      camunda:type="external" camunda:topic="payment-retry-invoice">
+      <bpmn:incoming>Flow_Retry_Invoice</bpmn:incoming>
+      <bpmn:outgoing>Flow_Retry_PayAgain</bpmn:outgoing>
+    </bpmn:serviceTask>
+
+    <bpmn:serviceTask id="ServiceTask_StopCampaign" name="Остановить кампанию"
+                      camunda:type="external" camunda:topic="campaign-stop">
+      <bpmn:incoming>Flow_End_Stop</bpmn:incoming>
+      <bpmn:incoming>Flow_Decide_Stop</bpmn:incoming>
+      <bpmn:incoming>Flow_Retry_Cancel</bpmn:incoming>
+      <bpmn:outgoing>Flow_Stop_End</bpmn:outgoing>
+    </bpmn:serviceTask>
+
+    <bpmn:endEvent id="EndEvent_CampaignFinished" name="Завершение">
+      <bpmn:incoming>Flow_Stop_End</bpmn:incoming>
+    </bpmn:endEvent>
+
+    <bpmn:sequenceFlow id="Flow_Start_CreateDraft" sourceRef="StartEvent_CreateCampaign" targetRef="ServiceTask_CreateDraft" />
+    <bpmn:sequenceFlow id="Flow_Draft_Configure" sourceRef="ServiceTask_CreateDraft" targetRef="UserTask_ConfigureCampaign" />
+    <bpmn:sequenceFlow id="Flow_Configure_Service" sourceRef="UserTask_ConfigureCampaign" targetRef="ServiceTask_ConfigureCampaign" />
+    <bpmn:sequenceFlow id="Flow_Configured_Upload" sourceRef="ServiceTask_ConfigureCampaign" targetRef="UserTask_UploadCreatives" />
+    <bpmn:sequenceFlow id="Flow_Upload_Service" sourceRef="UserTask_UploadCreatives" targetRef="ServiceTask_ScheduleCreativeUpload" />
+    <bpmn:sequenceFlow id="Flow_Upload_WaitResult" sourceRef="ServiceTask_ScheduleCreativeUpload" targetRef="IntermediateMessage_CreativeUploadFinished" />
+    <bpmn:sequenceFlow id="Flow_Upload_ResultGateway" sourceRef="IntermediateMessage_CreativeUploadFinished" targetRef="Gateway_CreativeUploadResult" />
+    <bpmn:sequenceFlow id="Flow_UploadFailed_Retry" sourceRef="Gateway_CreativeUploadResult" targetRef="UserTask_UploadCreatives">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${creativeUploadStatus == 'FAILED'}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_UploadCompleted" sourceRef="Gateway_CreativeUploadResult" targetRef="Gateway_UploadMore" />
+    <bpmn:sequenceFlow id="Flow_UploadMore_Yes" sourceRef="Gateway_UploadMore" targetRef="UserTask_UploadCreatives">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${uploadMore == true}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_UploadMore_No" sourceRef="Gateway_UploadMore" targetRef="UserTask_SubmitForCheck" />
+    <bpmn:sequenceFlow id="Flow_Submit_Service" sourceRef="UserTask_SubmitForCheck" targetRef="ServiceTask_SubmitForModeration" />
+    <bpmn:sequenceFlow id="Flow_Submit_Moderation" sourceRef="ServiceTask_SubmitForModeration" targetRef="UserTask_ManualModeration" />
+    <bpmn:sequenceFlow id="Flow_Moderation_Service" sourceRef="UserTask_ManualModeration" targetRef="ServiceTask_ModerationDecision" />
+    <bpmn:sequenceFlow id="Flow_Moderation_Gateway" sourceRef="ServiceTask_ModerationDecision" targetRef="Gateway_ModerationApproved" />
+    <bpmn:sequenceFlow id="Flow_Moderation_Approved" sourceRef="Gateway_ModerationApproved" targetRef="UserTask_Pay">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${moderationApproved == true}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_Moderation_Rejected" sourceRef="Gateway_ModerationApproved" targetRef="UserTask_FixAfterRejection" />
+    <bpmn:sequenceFlow id="Flow_Fix_Service" sourceRef="UserTask_FixAfterRejection" targetRef="ServiceTask_ReconfigureAfterRejection" />
+    <bpmn:sequenceFlow id="Flow_Fix_UploadAgain" sourceRef="ServiceTask_ReconfigureAfterRejection" targetRef="UserTask_UploadCreatives" />
+    <bpmn:sequenceFlow id="Flow_Pay_WaitResult" sourceRef="UserTask_Pay" targetRef="EventBasedGateway_PaymentResult" />
+    <bpmn:sequenceFlow id="Flow_Payment_Succeeded" sourceRef="EventBasedGateway_PaymentResult" targetRef="IntermediateMessage_PaymentSucceeded" />
+    <bpmn:sequenceFlow id="Flow_Payment_Canceled" sourceRef="EventBasedGateway_PaymentResult" targetRef="IntermediateMessage_PaymentCanceled" />
+    <bpmn:sequenceFlow id="Flow_PaymentSucceeded_Service" sourceRef="IntermediateMessage_PaymentSucceeded" targetRef="ServiceTask_PaymentSucceeded" />
+    <bpmn:sequenceFlow id="Flow_PaymentCanceled_Service" sourceRef="IntermediateMessage_PaymentCanceled" targetRef="ServiceTask_PaymentCanceled" />
+    <bpmn:sequenceFlow id="Flow_Wait_Start" sourceRef="ServiceTask_PaymentSucceeded" targetRef="IntermediateTimer_WaitStart" />
+    <bpmn:sequenceFlow id="Flow_Start_Activate" sourceRef="IntermediateTimer_WaitStart" targetRef="ServiceTask_ActivateCampaign" />
+    <bpmn:sequenceFlow id="Flow_Active_Wait" sourceRef="ServiceTask_ActivateCampaign" targetRef="EventBasedGateway_ActiveWait" />
+    <bpmn:sequenceFlow id="Flow_End_Timer" sourceRef="EventBasedGateway_ActiveWait" targetRef="IntermediateTimer_EndAt" />
+    <bpmn:sequenceFlow id="Flow_Pause_Message" sourceRef="EventBasedGateway_ActiveWait" targetRef="IntermediateMessage_PauseRequested" />
+    <bpmn:sequenceFlow id="Flow_End_Stop" sourceRef="IntermediateTimer_EndAt" targetRef="ServiceTask_StopCampaign" />
+    <bpmn:sequenceFlow id="Flow_Pause_Freeze" sourceRef="IntermediateMessage_PauseRequested" targetRef="ServiceTask_FreezeActiveCampaign" />
+    <bpmn:sequenceFlow id="Flow_Freeze_Decide" sourceRef="ServiceTask_FreezeActiveCampaign" targetRef="UserTask_DecideResumeOrStop" />
+    <bpmn:sequenceFlow id="Flow_Decide_ResumeGateway" sourceRef="UserTask_DecideResumeOrStop" targetRef="Gateway_ResumeOrStop" />
+    <bpmn:sequenceFlow id="Flow_Decide_Resume" sourceRef="Gateway_ResumeOrStop" targetRef="ServiceTask_ResumeCampaign">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${proceed == true}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_Decide_Stop" sourceRef="Gateway_ResumeOrStop" targetRef="ServiceTask_StopCampaign" />
+    <bpmn:sequenceFlow id="Flow_Resume_ActiveWait" sourceRef="ServiceTask_ResumeCampaign" targetRef="EventBasedGateway_ActiveWait" />
+    <bpmn:sequenceFlow id="Flow_Canceled_RetryTask" sourceRef="ServiceTask_PaymentCanceled" targetRef="UserTask_RetryPaymentOrCancel" />
+    <bpmn:sequenceFlow id="Flow_Retry_Gateway" sourceRef="UserTask_RetryPaymentOrCancel" targetRef="Gateway_RetryPayment" />
+    <bpmn:sequenceFlow id="Flow_Retry_Invoice" sourceRef="Gateway_RetryPayment" targetRef="ServiceTask_RetryPaymentInvoice">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${retryPayment == true}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_Retry_Cancel" sourceRef="Gateway_RetryPayment" targetRef="ServiceTask_StopCampaign" />
+    <bpmn:sequenceFlow id="Flow_Retry_PayAgain" sourceRef="ServiceTask_RetryPaymentInvoice" targetRef="UserTask_Pay" />
+    <bpmn:sequenceFlow id="Flow_Stop_End" sourceRef="ServiceTask_StopCampaign" targetRef="EndEvent_CampaignFinished" />
   </bpmn:process>
-  <bpmn:message id="Message_PaymentReceived" name="Оплата получена" />
-  <bpmn:process id="Process_199wqr0" isExecutable="false">
-    <bpmn:laneSet id="LaneSet_003yh15" />
-  </bpmn:process>
-  <bpmndi:BPMNDiagram id="BPMNDiagram_Aviasales_Lanes">
-    <bpmndi:BPMNPlane id="BPMNPlane_Aviasales" bpmnElement="Collaboration_Aviasales">
-      <bpmndi:BPMNShape id="Shape_Participant_Aviasales" bpmnElement="Participant_Aviasales" isHorizontal="true">
-        <dc:Bounds x="155" y="250" width="4975" height="1340" />
-      </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Shape_Lane_Manager" bpmnElement="Lane_Manager" isHorizontal="true">
-        <dc:Bounds x="205" y="250" width="4925" height="360" />
-        <bpmndi:BPMNLabel />
-      </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Shape_Lane_System" bpmnElement="Lane_System" isHorizontal="true">
-        <dc:Bounds x="205" y="610" width="4925" height="415" />
-      </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Shape_Lane_Moderation" bpmnElement="Lane_Moderation" isHorizontal="true">
-        <dc:Bounds x="205" y="1025" width="4925" height="565" />
-        <bpmndi:BPMNLabel />
-      </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Shape_CreateDraft" bpmnElement="UserTask_CreateDraft">
-        <dc:Bounds x="335" y="340" width="210" height="80" />
-        <bpmndi:BPMNLabel />
-      </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Shape_Start" bpmnElement="StartEvent_CreateCampaign">
-        <dc:Bounds x="255" y="362" width="36" height="36" />
-        <bpmndi:BPMNLabel>
-          <dc:Bounds x="258" y="398" width="30" height="14" />
-        </bpmndi:BPMNLabel>
-      </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Shape_Upload" bpmnElement="UserTask_UploadCreatives">
-        <dc:Bounds x="1040" y="340" width="220" height="80" />
-      </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Shape_Submit" bpmnElement="UserTask_SubmitForCheck">
-        <dc:Bounds x="1350" y="340" width="220" height="80" />
-      </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Shape_Moderation" bpmnElement="UserTask_ManualModeration">
-        <dc:Bounds x="1340" y="1080" width="240" height="80" />
-      </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Shape_GwModeration" bpmnElement="Gateway_ModerationApproved" isMarkerVisible="true">
-        <dc:Bounds x="2035" y="1095" width="50" height="50" />
-        <bpmndi:BPMNLabel>
-          <dc:Bounds x="2031" y="1155" width="58" height="14" />
-        </bpmndi:BPMNLabel>
-      </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Shape_FixAfterReject" bpmnElement="UserTask_FixAfterRejection">
-        <dc:Bounds x="1900" y="340" width="320" height="80" />
-        <bpmndi:BPMNLabel />
-      </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="BPMNShape_11we0xu" bpmnElement="Activity_191l1ni">
-        <dc:Bounds x="2310" y="340" width="320" height="80" />
-        <bpmndi:BPMNLabel />
-      </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="BPMNShape_0sismef" bpmnElement="Activity_02zbr4x">
-        <dc:Bounds x="2340" y="800" width="260" height="80" />
-        <bpmndi:BPMNLabel />
-      </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Shape_EventGw" bpmnElement="EventBasedGateway_WaitEndSignal">
-        <dc:Bounds x="3815" y="910" width="50" height="50" />
-        <bpmndi:BPMNLabel>
-          <dc:Bounds x="3848" y="867" width="63" height="40" />
-        </bpmndi:BPMNLabel>
-      </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Shape_Activate" bpmnElement="ServiceTask_ActivateCampaign">
-        <dc:Bounds x="3510" y="895" width="240" height="80" />
-        <bpmndi:BPMNLabel />
-      </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Shape_WaitStart" bpmnElement="IntermediateTimer_WaitStart">
-        <dc:Bounds x="3452" y="917" width="36" height="36" />
-        <bpmndi:BPMNLabel>
-          <dc:Bounds x="3429" y="867" width="81" height="40" />
-        </bpmndi:BPMNLabel>
-      </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Shape_Decide" bpmnElement="UserTask_DecideResumeOrStop">
-        <dc:Bounds x="4090" y="480" width="280" height="80" />
-        <bpmndi:BPMNLabel />
-      </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Shape_Freeze" bpmnElement="Task_FreezeCampaign">
-        <dc:Bounds x="3510" y="620" width="260" height="80" />
-      </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="BPMNShape_06cu5sb" bpmnElement="Gateway_1szdbtx" isMarkerVisible="true">
-        <dc:Bounds x="3615" y="315" width="50" height="50" />
-        <bpmndi:BPMNLabel>
-          <dc:Bounds x="3661" y="306" width="58" height="27" />
-        </bpmndi:BPMNLabel>
-      </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="BPMNShape_053nd97" bpmnElement="Activity_17kbayu">
-        <dc:Bounds x="3500" y="450" width="280" height="80" />
-        <bpmndi:BPMNLabel />
-      </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Shape_Configure" bpmnElement="UserTask_ConfigureCampaign">
-        <dc:Bounds x="600" y="340" width="360" height="80" />
-        <bpmndi:BPMNLabel />
-      </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="BPMNShape_0rvhiuw" bpmnElement="Gateway_0t9euku" isMarkerVisible="true">
-        <dc:Bounds x="2955" y="735" width="50" height="50" />
-        <bpmndi:BPMNLabel>
-          <dc:Bounds x="3014.5" y="753" width="57" height="14" />
-        </bpmndi:BPMNLabel>
-      </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Activity_1biu9rw_di" bpmnElement="Activity_1biu9rw">
-        <dc:Bounds x="2780" y="720" width="100" height="80" />
-        <bpmndi:BPMNLabel />
-      </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Shape_EndAt" bpmnElement="IntermediateTimer_EndAt">
-        <dc:Bounds x="4112" y="917" width="36" height="36" />
-        <bpmndi:BPMNLabel>
-          <dc:Bounds x="4085" y="893" width="89" height="14" />
-        </bpmndi:BPMNLabel>
-      </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Shape_Stop" bpmnElement="ServiceTask_StopCampaign">
-        <dc:Bounds x="4380" y="895" width="240" height="80" />
-      </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Shape_End" bpmnElement="EndEvent_CampaignFinished">
-        <dc:Bounds x="4742" y="917" width="36" height="36" />
-        <bpmndi:BPMNLabel>
-          <dc:Bounds x="4728" y="966" width="64" height="14" />
-        </bpmndi:BPMNLabel>
-      </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Shape_PauseReq" bpmnElement="IntermediateMessage_PauseRequested">
-        <dc:Bounds x="3912" y="542" width="36" height="36" />
-        <bpmndi:BPMNLabel>
-          <dc:Bounds x="3885" y="588" width="90" height="14" />
-        </bpmndi:BPMNLabel>
-      </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Activity_1nd6hw6_di" bpmnElement="Activity_0q7pyks">
-        <dc:Bounds x="3880" y="410" width="100" height="80" />
-      </bpmndi:BPMNShape>
-      <bpmndi:BPMNEdge id="Edge_Flow_01" bpmnElement="Flow_01">
-        <di:waypoint x="291" y="380" />
-        <di:waypoint x="335" y="380" />
-      </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="Edge_Flow_05" bpmnElement="Flow_05">
-        <di:waypoint x="545" y="380" />
-        <di:waypoint x="600" y="380" />
-      </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="Edge_Flow_03" bpmnElement="Flow_03">
-        <di:waypoint x="960" y="380" />
-        <di:waypoint x="1040" y="380" />
-      </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="Edge_Flow_04" bpmnElement="Flow_04">
-        <di:waypoint x="1260" y="380" />
-        <di:waypoint x="1350" y="380" />
-      </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="Edge_Flow_11_RETRY" bpmnElement="Flow_11_RETRY">
-        <di:waypoint x="1900" y="380" />
-        <di:waypoint x="1570" y="380" />
-      </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="Flow_0gpfg6c_di" bpmnElement="Flow_0gpfg6c">
-        <di:waypoint x="1470" y="420" />
-        <di:waypoint x="1470" y="1080" />
-      </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="Edge_Flow_09" bpmnElement="Flow_09">
-        <di:waypoint x="1580" y="1120" />
-        <di:waypoint x="2035" y="1120" />
-      </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="Edge_Flow_10_OK" bpmnElement="Flow_10_OK">
-        <di:waypoint x="2085" y="1120" />
-        <di:waypoint x="2470" y="1120" />
-        <di:waypoint x="2470" y="880" />
-      </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="Edge_Flow_10_REJECT" bpmnElement="Flow_10_REJECT">
-        <di:waypoint x="2060" y="1095" />
-        <di:waypoint x="2060" y="420" />
-      </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="Flow_0u8941y_di" bpmnElement="Flow_0u8941y">
-        <di:waypoint x="2470" y="800" />
-        <di:waypoint x="2470" y="420" />
-      </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="Flow_1i7cs46_di" bpmnElement="Flow_1i7cs46">
-        <di:waypoint x="3615" y="340" />
-        <di:waypoint x="2740" y="340" />
-        <di:waypoint x="2740" y="840" />
-        <di:waypoint x="2600" y="840" />
-      </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="Edge_Flow_19_PAUSE" bpmnElement="Flow_19_PAUSE">
-        <di:waypoint x="3840" y="910" />
-        <di:waypoint x="3840" y="560" />
-        <di:waypoint x="3912" y="560" />
-      </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="Edge_Flow_22_PAUSE" bpmnElement="Flow_22_PAUSE">
-        <di:waypoint x="3980" y="450" />
-        <di:waypoint x="4035" y="450" />
-        <di:waypoint x="4035" y="510" />
-        <di:waypoint x="4090" y="510" />
-      </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="Edge_Flow_16" bpmnElement="Flow_16">
-        <di:waypoint x="3750" y="935" />
-        <di:waypoint x="3815" y="935" />
-      </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="Edge_Flow_17_TIMER" bpmnElement="Flow_17_TIMER">
-        <di:waypoint x="3865" y="935" />
-        <di:waypoint x="4112" y="935" />
-      </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="Edge_Flow_20_TIMER_STOP" bpmnElement="Flow_20_TIMER_STOP">
-        <di:waypoint x="4148" y="933" />
-        <di:waypoint x="4380" y="933" />
-      </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="Edge_Flow_28_END" bpmnElement="Flow_28_END">
-        <di:waypoint x="4620" y="935" />
-        <di:waypoint x="4742" y="935" />
-      </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="Flow_0kgu25i_di" bpmnElement="Flow_0kgu25i">
-        <di:waypoint x="3665" y="340" />
-        <di:waypoint x="4760" y="350" />
-        <di:waypoint x="4760" y="917" />
-      </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="Edge_Flow_15" bpmnElement="Flow_15">
-        <di:waypoint x="3488" y="935" />
-        <di:waypoint x="3510" y="935" />
-      </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="Flow_1xcpjpr_di" bpmnElement="Flow_1xcpjpr">
-        <di:waypoint x="2980" y="785" />
-        <di:waypoint x="2980" y="935" />
-        <di:waypoint x="3452" y="935" />
-      </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="Flow_0ojquqe_di" bpmnElement="Flow_0ojquqe">
-        <di:waypoint x="2980" y="735" />
-        <di:waypoint x="2980" y="660" />
-        <di:waypoint x="3510" y="660" />
-      </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="Flow_0mqgsz6_di" bpmnElement="Flow_0mqgsz6">
-        <di:waypoint x="3640" y="620" />
-        <di:waypoint x="3640" y="530" />
-      </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="Flow_126oxq5_di" bpmnElement="Flow_126oxq5">
-        <di:waypoint x="3640" y="450" />
-        <di:waypoint x="3640" y="365" />
-      </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="Flow_1fjbp9c_di" bpmnElement="Flow_1fjbp9c">
-        <di:waypoint x="2880" y="760" />
-        <di:waypoint x="2955" y="760" />
-      </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="Flow_1vai799_di" bpmnElement="Flow_1vai799">
-        <di:waypoint x="2630" y="380" />
-        <di:waypoint x="2705" y="380" />
-        <di:waypoint x="2705" y="760" />
-        <di:waypoint x="2780" y="760" />
-      </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="Flow_0wc4wcz_di" bpmnElement="Flow_0wc4wcz">
-        <di:waypoint x="3930" y="542" />
-        <di:waypoint x="3930" y="490" />
-      </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="Flow_1gl0csn_di" bpmnElement="Flow_1gl0csn">
-        <di:waypoint x="4370" y="520" />
-        <di:waypoint x="4500" y="520" />
-        <di:waypoint x="4500" y="895" />
-      </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="Flow_0ugea3g_di" bpmnElement="Flow_0ugea3g">
-        <di:waypoint x="4230" y="560" />
-        <di:waypoint x="4230" y="818" />
-        <di:waypoint x="3859" y="929" />
-      </bpmndi:BPMNEdge>
-      <bpmndi:BPMNShape id="Participant_1d2ew2t_di" bpmnElement="Participant_1d2ew2t" isHorizontal="true">
-        <dc:Bounds x="155" y="81" width="4975" height="60" />
-        <bpmndi:BPMNLabel />
-      </bpmndi:BPMNShape>
-      <bpmndi:BPMNEdge id="Flow_0zj91l1_di" bpmnElement="Flow_0zj91l1">
-        <di:waypoint x="2470" y="340" />
-        <di:waypoint x="2470" y="141" />
-      </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="Flow_0zc9esg_di" bpmnElement="Flow_0zc9esg">
-        <di:waypoint x="2340" y="830" />
-        <di:waypoint x="2270" y="830" />
-        <di:waypoint x="2270" y="141" />
-      </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="Flow_1u2hrju_di" bpmnElement="Flow_1u2hrju">
-        <di:waypoint x="2250" y="141" />
-        <di:waypoint x="2250" y="860" />
-        <di:waypoint x="2340" y="860" />
-      </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="Flow_1pe3sum_di" bpmnElement="Flow_1pe3sum">
-        <di:waypoint x="2830" y="141" />
-        <di:waypoint x="2830" y="720" />
-      </bpmndi:BPMNEdge>
-    </bpmndi:BPMNPlane>
-  </bpmndi:BPMNDiagram>
 </bpmn:definitions>

@@ -2,6 +2,7 @@ package ifmo.se.lab1app.auth.application;
 
 import ifmo.se.lab1app.auth.domain.UserAccount;
 import ifmo.se.lab1app.auth.infra.UserAccountRepository;
+import ifmo.se.lab1app.camunda.CamundaIdentitySyncService;
 import ifmo.se.lab1app.shared.domain.UserRole;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
@@ -18,6 +19,7 @@ public class BaseModeratorBootstrap implements ApplicationRunner {
     private final UserAccountRepository userAccountRepository;
     private final PasswordEncoder passwordEncoder;
     private final UserSyncToOneCService userSyncToOneCService;
+    private final CamundaIdentitySyncService camundaIdentitySyncService;
 
     @Value("${app.security.bootstrap.moderator.enabled:true}")
     private boolean enabled;
@@ -47,6 +49,7 @@ public class BaseModeratorBootstrap implements ApplicationRunner {
         moderator.setRole(UserRole.COMPANY_MODERATOR);
         UserAccount saved = userAccountRepository.save(moderator);
         userSyncToOneCService.syncUserBestEffort(saved);
+        camundaIdentitySyncService.syncUserBestEffort(saved, password);
     }
 
     private void normalizeModerator(UserAccount moderator) {
@@ -66,8 +69,10 @@ public class BaseModeratorBootstrap implements ApplicationRunner {
         if (changed) {
             UserAccount saved = userAccountRepository.save(moderator);
             userSyncToOneCService.syncUserBestEffort(saved);
+            camundaIdentitySyncService.syncUserBestEffort(saved, password);
         } else {
             userSyncToOneCService.syncUserBestEffort(moderator);
+            camundaIdentitySyncService.syncUserBestEffort(moderator, password);
         }
     }
 

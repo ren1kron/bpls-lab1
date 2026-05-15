@@ -18,6 +18,7 @@ import ifmo.se.lab1app.shared.infra.KafkaOutboxEventRepository;
 import ifmo.se.lab1app.shared.kafka.CreativeUploadKafkaProperties;
 import ifmo.se.lab1app.shared.kafka.dto.CreativeUploadRequestEvent;
 import ifmo.se.lab1app.shared.kafka.dto.CreativeUploadResultEvent;
+import ifmo.se.lab1app.worker.camunda.CreativeUploadProcessNotifier;
 import java.util.EnumSet;
 import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
@@ -40,6 +41,7 @@ public class CreativeUploadSagaHandler {
     private final ObjectMapper objectMapper;
     private final CreativeUploadKafkaProperties kafkaProperties;
     private final CampaignEisOutboxService eisOutboxService;
+    private final CreativeUploadProcessNotifier processNotifier;
 
     public CreativeUploadSagaHandler(
             CreativeUploadTaskRepository taskRepository,
@@ -49,7 +51,8 @@ public class CreativeUploadSagaHandler {
             TransactionExecutor transactions,
             ObjectMapper objectMapper,
             CreativeUploadKafkaProperties kafkaProperties,
-            CampaignEisOutboxService eisOutboxService
+            CampaignEisOutboxService eisOutboxService,
+            CreativeUploadProcessNotifier processNotifier
     ) {
         this.taskRepository = taskRepository;
         this.campaignRepository = campaignRepository;
@@ -59,6 +62,7 @@ public class CreativeUploadSagaHandler {
         this.objectMapper = objectMapper;
         this.kafkaProperties = kafkaProperties;
         this.eisOutboxService = eisOutboxService;
+        this.processNotifier = processNotifier;
     }
 
     public void handleRequestPayload(String payload) {
@@ -125,6 +129,7 @@ public class CreativeUploadSagaHandler {
                 campaign.getStatus(),
                 campaign
         );
+        processNotifier.notifyFinished(task);
     }
 
     private void markTaskFailed(String taskId, String error) {
@@ -144,6 +149,7 @@ public class CreativeUploadSagaHandler {
             campaignRepository.findByIdForUpdate(task.getCampaignId())
                     .ifPresent(this::refreshCampaignStatusAfterTaskFinished);
             saveResultEventIfAbsent(task);
+            processNotifier.notifyFinished(task);
         });
     }
 

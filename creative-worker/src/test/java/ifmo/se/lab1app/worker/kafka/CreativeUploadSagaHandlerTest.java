@@ -24,6 +24,7 @@ import ifmo.se.lab1app.shared.infra.CreativeUploadTaskRepository;
 import ifmo.se.lab1app.shared.infra.KafkaOutboxEventRepository;
 import ifmo.se.lab1app.shared.kafka.CreativeUploadKafkaProperties;
 import ifmo.se.lab1app.shared.kafka.dto.CreativeUploadRequestEvent;
+import ifmo.se.lab1app.worker.camunda.CreativeUploadProcessNotifier;
 import java.util.Optional;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
@@ -53,6 +54,9 @@ class CreativeUploadSagaHandlerTest {
     @Mock
     private CampaignEisOutboxService eisOutboxService;
 
+    @Mock
+    private CreativeUploadProcessNotifier processNotifier;
+
     private CreativeUploadSagaHandler sagaHandler;
     private CreativeUploadKafkaProperties kafkaProperties;
 
@@ -72,7 +76,8 @@ class CreativeUploadSagaHandlerTest {
                 transactions,
                 new ObjectMapper(),
                 kafkaProperties,
-                eisOutboxService
+                eisOutboxService,
+                processNotifier
         );
     }
 
@@ -119,6 +124,7 @@ class CreativeUploadSagaHandlerTest {
                 CampaignStatus.CREATIVES_UPLOADED,
                 campaign
         );
+        verify(processNotifier).notifyFinished(task);
     }
 
     @Test
@@ -144,6 +150,7 @@ class CreativeUploadSagaHandlerTest {
         assertThat(task.getError()).contains("Task campaign mismatch");
         verify(outboxRepository).save(any());
         verifyNoInteractions(eisOutboxService);
+        verify(processNotifier).notifyFinished(task);
     }
 
     private CreativeUploadTask task(String url) {

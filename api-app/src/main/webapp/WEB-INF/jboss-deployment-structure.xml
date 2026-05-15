@@ -16,6 +16,14 @@
             <module name="org.hibernate.validator"/>
             <module name="org.hibernate.validator.cdi"/>
             <module name="org.hibernate.commons-annotations"/>
+            <module name="com.fasterxml.jackson.core.jackson-annotations"/>
+            <module name="com.fasterxml.jackson.core.jackson-core"/>
+            <module name="com.fasterxml.jackson.core.jackson-databind"/>
+            <module name="com.fasterxml.jackson.dataformat.jackson-dataformat-yaml"/>
+            <module name="com.fasterxml.jackson.datatype.jackson-datatype-jdk8"/>
+            <module name="com.fasterxml.jackson.datatype.jackson-datatype-jsr310"/>
+            <module name="com.fasterxml.jackson.jakarta.jackson-jakarta-json-provider"/>
+            <module name="com.fasterxml.jackson.jaxrs.jackson-jaxrs-json-provider"/>
         </exclusions>
     </deployment>
 </jboss-deployment-structure>

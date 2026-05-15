@@ -1,9 +1,9 @@
 FROM quay.io/wildfly/wildfly:36.0.1.Final-jdk17
 
-ARG API_WAR=api-app/build/libs/api-app-0.0.1-SNAPSHOT.war
+ARG CREATIVE_WORKER_WAR=creative-worker/build/libs/creative-worker-0.0.1-SNAPSHOT.war
 ARG ONEC_EIS_RAR=onec-eis-connector/build/distributions/onec-eis-connector-0.0.1-SNAPSHOT.rar
 
-COPY ${API_WAR} /opt/jboss/wildfly/standalone/deployments/api-app.war
+COPY ${CREATIVE_WORKER_WAR} /opt/jboss/wildfly/standalone/deployments/creative-worker.war
 COPY ${ONEC_EIS_RAR} /opt/jboss/wildfly/standalone/deployments/onec-eis-connector.rar
 
 EXPOSE 8080 9990

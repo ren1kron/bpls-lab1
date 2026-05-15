@@ -13,17 +13,18 @@ import org.w3c.dom.Element;
 
 class AviasalesProcessBpmnTest {
 
+    private static final String BPMN_NS = "http://www.omg.org/spec/BPMN/20100524/MODEL";
+    private static final String BPMNDI_NS = "http://www.omg.org/spec/BPMN/20100524/DI";
+    private static final String CAMUNDA_NS = "http://camunda.org/schema/1.0/bpmn";
+
     @Test
     void shouldDeclareExecutableCamundaProcessFormsMessagesAndExternalTopics() throws Exception {
         Document document = parseProcess();
-        Element process = (Element) document.getElementsByTagNameNS(
-                "http://www.omg.org/spec/BPMN/20100524/MODEL",
-                "process"
-        ).item(0);
+        Element process = (Element) document.getElementsByTagNameNS(BPMN_NS, "process").item(0);
 
         assertThat(process.getAttribute("id")).isEqualTo("aviasales-campaign-launch");
         assertThat(process.getAttribute("isExecutable")).isEqualTo("true");
-        assertThat(document.getElementsByTagNameNS("http://camunda.org/schema/1.0/bpmn", "formData").getLength())
+        assertThat(document.getElementsByTagNameNS(CAMUNDA_NS, "formData").getLength())
                 .isGreaterThanOrEqualTo(8);
 
         Set<String> topics = elements(document, "serviceTask").stream()
@@ -53,6 +54,12 @@ class AviasalesProcessBpmnTest {
                 "PaymentCanceled",
                 "PauseRequested"
         );
+
+        assertThat(document.getElementsByTagNameNS(BPMNDI_NS, "BPMNDiagram").getLength()).isEqualTo(1);
+        Element plane = (Element) document.getElementsByTagNameNS(BPMNDI_NS, "BPMNPlane").item(0);
+        assertThat(plane.getAttribute("bpmnElement")).isEqualTo("aviasales-campaign-launch");
+        assertThat(document.getElementsByTagNameNS(BPMNDI_NS, "BPMNShape").getLength()).isGreaterThan(0);
+        assertThat(document.getElementsByTagNameNS(BPMNDI_NS, "BPMNEdge").getLength()).isGreaterThan(0);
     }
 
     private Document parseProcess() throws Exception {
@@ -69,7 +76,7 @@ class AviasalesProcessBpmnTest {
     }
 
     private java.util.List<Element> elements(Document document, String localName) {
-        var nodes = document.getElementsByTagNameNS("http://www.omg.org/spec/BPMN/20100524/MODEL", localName);
+        var nodes = document.getElementsByTagNameNS(BPMN_NS, localName);
         java.util.ArrayList<Element> elements = new java.util.ArrayList<>();
         for (int index = 0; index < nodes.getLength(); index++) {
             elements.add((Element) nodes.item(index));

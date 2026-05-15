@@ -1,7 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <bpmn:definitions xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
                   xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL"
+                  xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI"
                   xmlns:camunda="http://camunda.org/schema/1.0/bpmn"
+                  xmlns:dc="http://www.omg.org/spec/DD/20100524/DC"
+                  xmlns:di="http://www.omg.org/spec/DD/20100524/DI"
                   id="Definitions_Aviasales_Camunda"
                   targetNamespace="http://example.com/aviasales/monetization"
                   exporter="Camunda Modeler"
@@ -396,4 +399,303 @@
     <bpmn:sequenceFlow id="Flow_Retry_PayAgain" sourceRef="ServiceTask_RetryPaymentInvoice" targetRef="UserTask_Pay" />
     <bpmn:sequenceFlow id="Flow_Stop_End" sourceRef="ServiceTask_StopCampaign" targetRef="EndEvent_CampaignFinished" />
   </bpmn:process>
+
+  <bpmndi:BPMNDiagram id="BPMNDiagram_AviasalesCampaign">
+    <bpmndi:BPMNPlane id="BPMNPlane_AviasalesCampaign" bpmnElement="aviasales-campaign-launch">
+      <bpmndi:BPMNShape id="StartEvent_CreateCampaign_di" bpmnElement="StartEvent_CreateCampaign">
+        <dc:Bounds x="160" y="112" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="ServiceTask_CreateDraft_di" bpmnElement="ServiceTask_CreateDraft">
+        <dc:Bounds x="250" y="90" width="140" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="UserTask_ConfigureCampaign_di" bpmnElement="UserTask_ConfigureCampaign">
+        <dc:Bounds x="450" y="90" width="140" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="ServiceTask_ConfigureCampaign_di" bpmnElement="ServiceTask_ConfigureCampaign">
+        <dc:Bounds x="650" y="90" width="140" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="UserTask_UploadCreatives_di" bpmnElement="UserTask_UploadCreatives">
+        <dc:Bounds x="850" y="90" width="140" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="ServiceTask_ScheduleCreativeUpload_di" bpmnElement="ServiceTask_ScheduleCreativeUpload">
+        <dc:Bounds x="1050" y="90" width="140" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="IntermediateMessage_CreativeUploadFinished_di" bpmnElement="IntermediateMessage_CreativeUploadFinished">
+        <dc:Bounds x="1260" y="112" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_CreativeUploadResult_di" bpmnElement="Gateway_CreativeUploadResult" isMarkerVisible="true">
+        <dc:Bounds x="1360" y="105" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_UploadMore_di" bpmnElement="Gateway_UploadMore" isMarkerVisible="true">
+        <dc:Bounds x="1480" y="105" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="UserTask_SubmitForCheck_di" bpmnElement="UserTask_SubmitForCheck">
+        <dc:Bounds x="1600" y="90" width="140" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="ServiceTask_SubmitForModeration_di" bpmnElement="ServiceTask_SubmitForModeration">
+        <dc:Bounds x="1800" y="90" width="140" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="UserTask_ManualModeration_di" bpmnElement="UserTask_ManualModeration">
+        <dc:Bounds x="2000" y="90" width="140" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="ServiceTask_ModerationDecision_di" bpmnElement="ServiceTask_ModerationDecision">
+        <dc:Bounds x="2200" y="90" width="140" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_ModerationApproved_di" bpmnElement="Gateway_ModerationApproved" isMarkerVisible="true">
+        <dc:Bounds x="2400" y="105" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="UserTask_FixAfterRejection_di" bpmnElement="UserTask_FixAfterRejection">
+        <dc:Bounds x="2580" y="340" width="140" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="ServiceTask_ReconfigureAfterRejection_di" bpmnElement="ServiceTask_ReconfigureAfterRejection">
+        <dc:Bounds x="2780" y="340" width="140" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="UserTask_Pay_di" bpmnElement="UserTask_Pay">
+        <dc:Bounds x="2580" y="90" width="140" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="EventBasedGateway_PaymentResult_di" bpmnElement="EventBasedGateway_PaymentResult">
+        <dc:Bounds x="2780" y="105" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="IntermediateMessage_PaymentSucceeded_di" bpmnElement="IntermediateMessage_PaymentSucceeded">
+        <dc:Bounds x="2920" y="54" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="IntermediateMessage_PaymentCanceled_di" bpmnElement="IntermediateMessage_PaymentCanceled">
+        <dc:Bounds x="2920" y="252" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="ServiceTask_PaymentSucceeded_di" bpmnElement="ServiceTask_PaymentSucceeded">
+        <dc:Bounds x="3020" y="32" width="140" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="IntermediateTimer_WaitStart_di" bpmnElement="IntermediateTimer_WaitStart">
+        <dc:Bounds x="3220" y="54" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="ServiceTask_ActivateCampaign_di" bpmnElement="ServiceTask_ActivateCampaign">
+        <dc:Bounds x="3320" y="32" width="140" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="EventBasedGateway_ActiveWait_di" bpmnElement="EventBasedGateway_ActiveWait">
+        <dc:Bounds x="3520" y="47" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="IntermediateTimer_EndAt_di" bpmnElement="IntermediateTimer_EndAt">
+        <dc:Bounds x="3680" y="54" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="IntermediateMessage_PauseRequested_di" bpmnElement="IntermediateMessage_PauseRequested">
+        <dc:Bounds x="3680" y="172" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="ServiceTask_FreezeActiveCampaign_di" bpmnElement="ServiceTask_FreezeActiveCampaign">
+        <dc:Bounds x="3780" y="150" width="140" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="UserTask_DecideResumeOrStop_di" bpmnElement="UserTask_DecideResumeOrStop">
+        <dc:Bounds x="3980" y="150" width="140" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_ResumeOrStop_di" bpmnElement="Gateway_ResumeOrStop" isMarkerVisible="true">
+        <dc:Bounds x="4180" y="165" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="ServiceTask_ResumeCampaign_di" bpmnElement="ServiceTask_ResumeCampaign">
+        <dc:Bounds x="4300" y="150" width="140" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="ServiceTask_PaymentCanceled_di" bpmnElement="ServiceTask_PaymentCanceled">
+        <dc:Bounds x="3020" y="230" width="140" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="UserTask_RetryPaymentOrCancel_di" bpmnElement="UserTask_RetryPaymentOrCancel">
+        <dc:Bounds x="3220" y="230" width="140" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_RetryPayment_di" bpmnElement="Gateway_RetryPayment" isMarkerVisible="true">
+        <dc:Bounds x="3420" y="245" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="ServiceTask_RetryPaymentInvoice_di" bpmnElement="ServiceTask_RetryPaymentInvoice">
+        <dc:Bounds x="3560" y="350" width="140" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="ServiceTask_StopCampaign_di" bpmnElement="ServiceTask_StopCampaign">
+        <dc:Bounds x="4500" y="230" width="140" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="EndEvent_CampaignFinished_di" bpmnElement="EndEvent_CampaignFinished">
+        <dc:Bounds x="4680" y="252" width="36" height="36" />
+      </bpmndi:BPMNShape>
+
+      <bpmndi:BPMNEdge id="Flow_Start_CreateDraft_di" bpmnElement="Flow_Start_CreateDraft">
+        <di:waypoint x="196" y="130" />
+        <di:waypoint x="250" y="130" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_Draft_Configure_di" bpmnElement="Flow_Draft_Configure">
+        <di:waypoint x="390" y="130" />
+        <di:waypoint x="450" y="130" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_Configure_Service_di" bpmnElement="Flow_Configure_Service">
+        <di:waypoint x="590" y="130" />
+        <di:waypoint x="650" y="130" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_Configured_Upload_di" bpmnElement="Flow_Configured_Upload">
+        <di:waypoint x="790" y="130" />
+        <di:waypoint x="850" y="130" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_Upload_Service_di" bpmnElement="Flow_Upload_Service">
+        <di:waypoint x="990" y="130" />
+        <di:waypoint x="1050" y="130" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_Upload_WaitResult_di" bpmnElement="Flow_Upload_WaitResult">
+        <di:waypoint x="1190" y="130" />
+        <di:waypoint x="1260" y="130" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_Upload_ResultGateway_di" bpmnElement="Flow_Upload_ResultGateway">
+        <di:waypoint x="1296" y="130" />
+        <di:waypoint x="1360" y="130" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_UploadFailed_Retry_di" bpmnElement="Flow_UploadFailed_Retry">
+        <di:waypoint x="1385" y="155" />
+        <di:waypoint x="1385" y="430" />
+        <di:waypoint x="920" y="430" />
+        <di:waypoint x="920" y="170" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_UploadCompleted_di" bpmnElement="Flow_UploadCompleted">
+        <di:waypoint x="1410" y="130" />
+        <di:waypoint x="1480" y="130" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_UploadMore_Yes_di" bpmnElement="Flow_UploadMore_Yes">
+        <di:waypoint x="1505" y="155" />
+        <di:waypoint x="1505" y="470" />
+        <di:waypoint x="920" y="470" />
+        <di:waypoint x="920" y="170" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_UploadMore_No_di" bpmnElement="Flow_UploadMore_No">
+        <di:waypoint x="1530" y="130" />
+        <di:waypoint x="1600" y="130" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_Submit_Service_di" bpmnElement="Flow_Submit_Service">
+        <di:waypoint x="1740" y="130" />
+        <di:waypoint x="1800" y="130" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_Submit_Moderation_di" bpmnElement="Flow_Submit_Moderation">
+        <di:waypoint x="1940" y="130" />
+        <di:waypoint x="2000" y="130" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_Moderation_Service_di" bpmnElement="Flow_Moderation_Service">
+        <di:waypoint x="2140" y="130" />
+        <di:waypoint x="2200" y="130" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_Moderation_Gateway_di" bpmnElement="Flow_Moderation_Gateway">
+        <di:waypoint x="2340" y="130" />
+        <di:waypoint x="2400" y="130" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_Moderation_Approved_di" bpmnElement="Flow_Moderation_Approved">
+        <di:waypoint x="2450" y="130" />
+        <di:waypoint x="2580" y="130" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_Moderation_Rejected_di" bpmnElement="Flow_Moderation_Rejected">
+        <di:waypoint x="2425" y="155" />
+        <di:waypoint x="2425" y="380" />
+        <di:waypoint x="2580" y="380" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_Fix_Service_di" bpmnElement="Flow_Fix_Service">
+        <di:waypoint x="2720" y="380" />
+        <di:waypoint x="2780" y="380" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_Fix_UploadAgain_di" bpmnElement="Flow_Fix_UploadAgain">
+        <di:waypoint x="2920" y="380" />
+        <di:waypoint x="2920" y="500" />
+        <di:waypoint x="920" y="500" />
+        <di:waypoint x="920" y="170" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_Pay_WaitResult_di" bpmnElement="Flow_Pay_WaitResult">
+        <di:waypoint x="2720" y="130" />
+        <di:waypoint x="2780" y="130" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_Payment_Succeeded_di" bpmnElement="Flow_Payment_Succeeded">
+        <di:waypoint x="2805" y="105" />
+        <di:waypoint x="2805" y="72" />
+        <di:waypoint x="2920" y="72" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_Payment_Canceled_di" bpmnElement="Flow_Payment_Canceled">
+        <di:waypoint x="2805" y="155" />
+        <di:waypoint x="2805" y="270" />
+        <di:waypoint x="2920" y="270" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_PaymentSucceeded_Service_di" bpmnElement="Flow_PaymentSucceeded_Service">
+        <di:waypoint x="2956" y="72" />
+        <di:waypoint x="3020" y="72" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_PaymentCanceled_Service_di" bpmnElement="Flow_PaymentCanceled_Service">
+        <di:waypoint x="2956" y="270" />
+        <di:waypoint x="3020" y="270" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_Wait_Start_di" bpmnElement="Flow_Wait_Start">
+        <di:waypoint x="3160" y="72" />
+        <di:waypoint x="3220" y="72" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_Start_Activate_di" bpmnElement="Flow_Start_Activate">
+        <di:waypoint x="3256" y="72" />
+        <di:waypoint x="3320" y="72" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_Active_Wait_di" bpmnElement="Flow_Active_Wait">
+        <di:waypoint x="3460" y="72" />
+        <di:waypoint x="3520" y="72" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_End_Timer_di" bpmnElement="Flow_End_Timer">
+        <di:waypoint x="3570" y="72" />
+        <di:waypoint x="3680" y="72" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_Pause_Message_di" bpmnElement="Flow_Pause_Message">
+        <di:waypoint x="3545" y="97" />
+        <di:waypoint x="3545" y="190" />
+        <di:waypoint x="3680" y="190" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_End_Stop_di" bpmnElement="Flow_End_Stop">
+        <di:waypoint x="3716" y="72" />
+        <di:waypoint x="4570" y="72" />
+        <di:waypoint x="4570" y="230" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_Pause_Freeze_di" bpmnElement="Flow_Pause_Freeze">
+        <di:waypoint x="3716" y="190" />
+        <di:waypoint x="3780" y="190" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_Freeze_Decide_di" bpmnElement="Flow_Freeze_Decide">
+        <di:waypoint x="3920" y="190" />
+        <di:waypoint x="3980" y="190" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_Decide_ResumeGateway_di" bpmnElement="Flow_Decide_ResumeGateway">
+        <di:waypoint x="4120" y="190" />
+        <di:waypoint x="4180" y="190" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_Decide_Resume_di" bpmnElement="Flow_Decide_Resume">
+        <di:waypoint x="4230" y="190" />
+        <di:waypoint x="4300" y="190" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_Decide_Stop_di" bpmnElement="Flow_Decide_Stop">
+        <di:waypoint x="4205" y="215" />
+        <di:waypoint x="4205" y="270" />
+        <di:waypoint x="4500" y="270" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_Resume_ActiveWait_di" bpmnElement="Flow_Resume_ActiveWait">
+        <di:waypoint x="4440" y="190" />
+        <di:waypoint x="4440" y="120" />
+        <di:waypoint x="3545" y="120" />
+        <di:waypoint x="3545" y="97" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_Canceled_RetryTask_di" bpmnElement="Flow_Canceled_RetryTask">
+        <di:waypoint x="3160" y="270" />
+        <di:waypoint x="3220" y="270" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_Retry_Gateway_di" bpmnElement="Flow_Retry_Gateway">
+        <di:waypoint x="3360" y="270" />
+        <di:waypoint x="3420" y="270" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_Retry_Invoice_di" bpmnElement="Flow_Retry_Invoice">
+        <di:waypoint x="3445" y="295" />
+        <di:waypoint x="3445" y="390" />
+        <di:waypoint x="3560" y="390" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_Retry_Cancel_di" bpmnElement="Flow_Retry_Cancel">
+        <di:waypoint x="3470" y="270" />
+        <di:waypoint x="4500" y="270" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_Retry_PayAgain_di" bpmnElement="Flow_Retry_PayAgain">
+        <di:waypoint x="3700" y="390" />
+        <di:waypoint x="3700" y="520" />
+        <di:waypoint x="2650" y="520" />
+        <di:waypoint x="2650" y="170" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_Stop_End_di" bpmnElement="Flow_Stop_End">
+        <di:waypoint x="4640" y="270" />
+        <di:waypoint x="4680" y="270" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
 </bpmn:definitions>

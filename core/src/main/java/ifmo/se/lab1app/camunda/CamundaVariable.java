@@ -1,5 +1,8 @@
 package ifmo.se.lab1app.camunda;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
+@JsonIgnoreProperties(ignoreUnknown = true)
 public record CamundaVariable(
         Object value,
         String type

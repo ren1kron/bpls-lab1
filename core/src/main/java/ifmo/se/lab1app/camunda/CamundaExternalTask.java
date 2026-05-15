@@ -1,8 +1,10 @@
 package ifmo.se.lab1app.camunda;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+@JsonIgnoreProperties(ignoreUnknown = true)
 public record CamundaExternalTask(
         String id,
         String topicName,
